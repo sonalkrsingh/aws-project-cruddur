@@ -39,5 +39,17 @@ Created the SNS topic via CLI
 
 Enabled Cloud watch for alarm monitoring (was enabled manually)
 
-Cloud Security
-    Safegurading the data , application & its services in the cloud from internal or external threat
+Cloud Security:
+    is Safegurading the data, application & its services in the cloud from internal or external threat
+
+AWS Organisation Unit
+Enables you to create & add AWS accounts in an organisation & manage adds policies, tags resoures with thier concerned departs.
+    ex:- Standby & Active
+            Standby--> Finance BU --> Shursti Finace head, shrusti@gmail.com
+
+Cloud trail
+    Creates a trail to log any & every activity for every AWS account in an organisation. IT stores the logs in an S3 activity for the management events. 
+Can enable for the event like unusual API calls per second
+
+
+
