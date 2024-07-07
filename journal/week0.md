@@ -38,3 +38,6 @@ Created the SNS topic via CLI
     --notification-endpoint sonalkumar2790@email.com
 
 Enabled Cloud watch for alarm monitoring (was enabled manually)
+
+Cloud Security
+    Safegurading the data , application & its services in the cloud from internal or external threat
