@@ -9,9 +9,11 @@ Setting up gitpod aws cli, configuring the account settings
 echo $PATH--> This Echo the path variables path added in the linux 
 
 To set env variables
+```
 export AWS_ACCESS_KEY_ID=""
 export AWS_SECRET_ACCESS_KEY=""
 export AWS_DEFAULT_REGION=""
+```
 
 TO list environment variable : env
 
@@ -24,19 +26,20 @@ Created a budget via CLI commands
 
 aws sts get-caller-identity --query Account --output text --> to get the caller Identity
 
+```
 aws budgets create-budget \
     --account-id $ACCOUNT_ID \
     --budget file://aws/JSON/budget.json \
     --notifications-with-subscribers file://aws/JSON/notifications-with-subscribers.json
-
+```
 Created the SNS topic via CLI
-
+```
     aws sns create-topic --name billing-alarm
     aws sns subscribe \
     --topic-arn TopicARN \
     --protocol email \
     --notification-endpoint sonalkumar2790@email.com
-
+```
 Enabled Cloud watch for alarm monitoring (was enabled manually)
 
 Cloud Security:
@@ -51,5 +54,4 @@ Cloud trail
     Creates a trail to log any & every activity for every AWS account in an organisation. IT stores the logs in an S3 activity for the management events. 
 Can enable for the event like unusual API calls per second
 
-
-
+- [Architecture of Application -Lucid.App](https://lucid.app/lucidchart/fbd6c6bd-ad1b-4d71-a520-b5d3e10fad33/edit?viewport_loc=-1143%2C-3704%2C4192%2C1955%2C0_0&invitationId=inv_4a703e12-0cc7-4e71-9882-d333a9972d9c)
