@@ -55,3 +55,17 @@ Cloud trail
 Can enable for the event like unusual API calls per second
 
 - [Architecture of Application -Lucid.App](https://lucid.app/lucidchart/fbd6c6bd-ad1b-4d71-a520-b5d3e10fad33/edit?viewport_loc=-1143%2C-3704%2C4192%2C1955%2C0_0&invitationId=inv_4a703e12-0cc7-4e71-9882-d333a9972d9c)
+
+# Marksdown Language Writting examples
+- These
+- are
+- bullets
+1. These
+2. are
+3. numerals pointers
+
+Tables Example
+
+| Hi | My | Name|
+|---| --- | --- |
+| is | Sonal Kumar | Singh|
