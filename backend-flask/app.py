@@ -43,7 +43,9 @@ from opentelemetry.sdk.trace.export import BatchSpanProcessor
 #Rollbar
 import rollbar
 import rollbar.contrib.flask
-from flask import got_request_exception
+from flask import Flask
+from flask.signals import got_request_exception
+
 
 #HoneyComb
 # Initialize tracing and an exporter that can send data to Honeycomb
@@ -86,7 +88,6 @@ cors = CORS(
 
 #Rollbar
 rollbar_access_token = os.getenv('ROLLBAR_ACCESS_TOKEN')
-@app.before_first_request
 def init_rollbar():
     """init rollbar module"""
     rollbar.init(
@@ -101,6 +102,9 @@ def init_rollbar():
 
     # send exceptions from `app` to rollbar, using flask's signal system.
     got_request_exception.connect(rollbar.contrib.flask.report_exception, app)
+
+with app.app_context():
+    init_rollbar()
 
 #Rollbar
 @app.route('/rollbar/test')
@@ -145,7 +149,7 @@ def data_create_message():
 
 @app.route("/api/activities/home", methods=['GET'])
 def data_home():
-  data = HomeActivities.run(logger=LOGGER)
+  data = HomeActivities.run()
   return data, 200
 
 @app.route("/api/activities/notifications", methods=['GET'])
