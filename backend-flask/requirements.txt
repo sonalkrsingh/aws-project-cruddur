@@ -1,12 +1,19 @@
 flask
 flask-cors
 
+#Honeycomb
 opentelemetry-api 
 opentelemetry-sdk 
 opentelemetry-exporter-otlp-proto-http 
 opentelemetry-instrumentation-flask 
 opentelemetry-instrumentation-requests
 
+#X-Ray
 aws-xray-sdk
 
+#CloudWatch
 watchtower
+
+#Rollbar
+blinker
+rollbar
