@@ -23,8 +23,8 @@ from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
 #X-Ray -----
-#from aws_xray_sdk.core import xray_recorder
-#from aws_xray_sdk.ext.flask.middleware import XRayMiddleware
+from aws_xray_sdk.core import xray_recorder
+from aws_xray_sdk.ext.flask.middleware import XRayMiddleware
 
 #Cloudwatch logs------  
 #import watchtower
@@ -56,13 +56,21 @@ trace.set_tracer_provider(provider)
 tracer = trace.get_tracer(__name__)
 
 #x-ray------
-#xray_url = os.getenv("AWS_XRAY_URL")
-#xray_recorder.configure(service='backend-flask', dynamic_naming=xray_url)
+xray_url = os.getenv("AWS_XRAY_URL")
+xray_recorder.configure(service='backend-flask', dynamic_naming=xray_url)
+
+# OTEL ----------
+# Show this in the logs within the backend-flask app (STDOUT)
+#simple_processor = SimpleSpanProcessor(ConsoleSpanExporter())
+#provider.add_span_processor(simple_processor)
+
+trace.set_tracer_provider(provider)
+tracer = trace.get_tracer(__name__)
 
 app = Flask(__name__)
 
 #X-RAY --------------
-#XRayMiddleware(app, xray_recorder)
+XRayMiddleware(app, xray_recorder)
 
 #Honeycomb
 # Initialize automatic instrumentation with Flask
@@ -80,6 +88,7 @@ cors = CORS(
   methods="OPTIONS,GET,HEAD,POST"
 )
 
+#CloudWatch Logs ---------
 #@app.after_request
 #def after_request(response):
 #    timestamp = strftime('[%Y-%b-%d %H:%M]')
@@ -148,6 +157,7 @@ def data_create_message():
   return
 
 @app.route("/api/activities/home", methods=['GET'])
+@xray_recorder.capture('activities_home')
 def data_home():
   data = HomeActivities.run()
   return data, 200
@@ -158,6 +168,7 @@ def data_notifications():
   return data, 200
 
 @app.route("/api/activities/@<string:handle>", methods=['GET'])
+@xray_recorder.capture('activities_users')
 def data_handle(handle):
   model = UserActivities.run(handle)
   if model['errors'] is not None:
@@ -175,7 +186,7 @@ def data_search():
     return model['data'], 200
   return
 
-@app.route("/api/activities", methods=['POST','OPTIONS'])
+@app.route("/api/activities", methods=['POST','OPTIONS']) 
 @cross_origin()
 def data_activities():
   user_handle  = 'andrewbrown'
@@ -189,6 +200,7 @@ def data_activities():
   return
 
 @app.route("/api/activities/<string:activity_uuid>", methods=['GET'])
+@xray_recorder.capture('activities_show')
 def data_show_activity(activity_uuid):
   data = ShowActivity.run(activity_uuid=activity_uuid)
   return data, 200
