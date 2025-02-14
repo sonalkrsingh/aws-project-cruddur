@@ -44,4 +44,4 @@ export default function DesktopSidebar(props) {
       </footer>
     </section>
   );
-}
+} 
