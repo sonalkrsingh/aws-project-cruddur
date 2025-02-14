@@ -3,7 +3,8 @@ import {ReactComponent as ElipsesIcon} from './svg/elipses.svg';
 import React from "react";
 
 // [TODO] Authenication
-import { Auth } from '@aws-amplify/auth';
+import { signOut } from '@aws-amplify/auth';
+
 
 export default function ProfileInfo(props) {
   const [popped, setPopped] = React.useState(false);
@@ -12,14 +13,15 @@ export default function ProfileInfo(props) {
     setPopped(!popped)
   }
 
-  const signOut = async () => {
+  const handleSignOut = async () => {
     try {
-        await Auth.signOut({ global: true });
-        window.location.href = "/"
+      await signOut({ global: true });
+      window.location.href = "/";
     } catch (error) {
-        console.log('error signing out: ', error);
+      console.log('Error signing out:', error);
     }
-  } 
+  };
+  
 
   const classes = () => {
     let classes = ["profile-info-wrapper"];
@@ -32,7 +34,7 @@ export default function ProfileInfo(props) {
   return (
     <div className={classes()}>
       <div className="profile-dialog">
-        <button onClick={signOut}>Sign Out</button> 
+      <button onClick={handleSignOut}>Sign Out</button>
       </div>
       <div className="profile-info" onClick={click_pop}>
         <div className="profile-avatar"></div>

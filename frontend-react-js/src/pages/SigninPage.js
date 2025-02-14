@@ -4,7 +4,7 @@ import {ReactComponent as Logo} from '../components/svg/logo.svg';
 import { Link } from "react-router-dom";
 
 // [TODO] Authenication
-import { Auth } from 'aws-amplify';
+import { signIn } from '@aws-amplify/auth';
 
 export default function SigninPage() {
 
@@ -14,24 +14,20 @@ export default function SigninPage() {
   const [cognitoErrors, setCognitoErrors] = React.useState('');
  
   const onsubmit = async (event) => {
-    setErrors('')
+    setErrors('');
     event.preventDefault();
     try {
-      Auth.signIn(username, password)
-        .then(user => {
-          localStorage.setItem("access_token", user.signInUserSession.accessToken.jwtToken)
-          window.location.href = "/"
-        })
-        .catch(err => { console.log('Error!', err) });
+      const user = await signIn({ username: email, password });
+      localStorage.setItem("access_token", user.signInDetails.session.idToken);
+      window.location.href = "/";
     } catch (error) {
-      if (error.code == 'UserNotConfirmedException') {
-        window.location.href = "/confirm"
+      if (error.name === 'UserNotConfirmedException') {
+        window.location.href = "/confirm";
       }
-      setErrors(error.message)
+      setErrors(error.message);
     }
-    return false
-  }
-
+  };
+  
   const email_onchange = (event) => {
     setEmail(event.target.value);
   }
