@@ -22,16 +22,19 @@ export default function SignupPage() {
     setErrors('');  
     console.log('username',username)
     console.log('email',email)
-    console.log('name',name)
+    console.log('name',name)  
+    console.log('app updated') 
+
 
     try {
         const { user } = await signUp({
-          username: email,
+          username: username,
           password: password,
-          attributes: {
-              name: name,
-              email: email,
-              preferred_username: username, 
+          options: {
+            userAttributes:{
+              email,
+              name,
+            }
           },
           autoSignIn: { // optional - enables auto sign in after user is confirmed
               enabled: true,
