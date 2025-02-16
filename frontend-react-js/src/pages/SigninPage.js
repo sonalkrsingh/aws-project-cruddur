@@ -4,7 +4,8 @@ import {ReactComponent as Logo} from '../components/svg/logo.svg';
 import { Link } from "react-router-dom";
 
 // [TODO] Authenication
-import { signIn } from '@aws-amplify/auth';
+import { signIn, signOut, getCurrentUser, fetchAuthSession } from '@aws-amplify/auth';
+
 
 export default function SigninPage() {
 
@@ -13,20 +14,44 @@ export default function SigninPage() {
   const [errors, setErrors] = React.useState('');
   const [cognitoErrors, setCognitoErrors] = React.useState('');
  
-  const onsubmit = async (event) => {
+
+  const onsubmit = async (event) => { 
     setErrors('');
     event.preventDefault();
+  
     try {
-      const user = await signIn({ username: email, password });
-      localStorage.setItem("access_token", user.signInDetails.session.idToken);
-      window.location.href = "/";
+      console.log("Signing in user...");
+  
+      //  Sign in with forced USER_PASSWORD_AUTH
+      const user = await signIn({
+        username: email,
+        password,
+        options: { authFlowType: "USER_PASSWORD_AUTH" }
+      });
+  
+      console.log("User Signed In:", user);
+  
+      //  Explicitly fetch session details after signing in
+      const session = await fetchAuthSession();
+      
+      console.log("Session Retrieved:", session);
+  
+      if (session?.tokens?.idToken) {
+        localStorage.setItem("access_token", session.tokens.idToken);
+        window.location.href = "/";
+      } else {
+        throw new Error("No session token found after sign-in.");
+      }
+  
     } catch (error) {
+      console.error("Sign-in Error:", error);
       if (error.name === 'UserNotConfirmedException') {
         window.location.href = "/confirm";
       }
       setErrors(error.message);
     }
   };
+  
   
   const email_onchange = (event) => {
     setEmail(event.target.value);
