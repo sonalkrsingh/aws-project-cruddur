@@ -1,26 +1,77 @@
 import './RecoverPage.css';
 import React from "react";
 import {ReactComponent as Logo} from '../components/svg/logo.svg';
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+
+//AWs-amplify cognito
+import { resetPassword, confirmResetPassword } from '@aws-amplify/auth';
 
 export default function RecoverPage() {
   // Username is Eamil
+  //const navigate = React.useNavigate();
+  //const [email, setEmail] = React.useState('');
   const [username, setUsername] = React.useState('');
   const [password, setPassword] = React.useState('');
   const [passwordAgain, setPasswordAgain] = React.useState('');
   const [code, setCode] = React.useState('');
   const [errors, setErrors] = React.useState('');
   const [formState, setFormState] = React.useState('send_code');
+  const [loading, setLoading] = React.useState(false);
+
+    // Get the stored email on component mount
+    React.useEffect(() => {
+      const storedEmail = sessionStorage.getItem('resetEmail');
+      if (storedEmail) {
+        setUsername(storedEmail);
+      }
+    }, []);
 
   const onsubmit_send_code = async (event) => {
     event.preventDefault();
-    console.log('onsubmit_send_code')
-    return false
+    setLoading(true);
+    setErrors('');
+
+    try {
+      await resetPassword({ username });
+      // Store username for the next step
+      sessionStorage.setItem('resetEmail', username);
+      setFormState('confirm_code');
+    } catch (error) {
+      console.error('Error requesting password reset:', error);
+      setErrors(error.message);
+    } finally {
+      setLoading(false);
+    }
   }
+
   const onsubmit_confirm_code = async (event) => {
     event.preventDefault();
-    console.log('onsubmit_confirm_code')
-    return false
+    setLoading(true);
+    setErrors('');
+
+    // Validate passwords match
+    if (password !== passwordAgain) {
+      setErrors('Passwords do not match');
+      setLoading(false);
+      return;
+    }
+
+    try {
+      await confirmResetPassword({
+        username,
+        confirmationCode: code,
+        newPassword: password
+      });
+      
+      // Clear stored email
+      sessionStorage.removeItem('resetEmail');
+      setFormState('success');
+    } catch (error) {
+      console.error('Error resetting password:', error);
+      setErrors(error.message);
+    } finally {
+      setLoading(false);
+    }
   }
 
   const username_onchange = (event) => {

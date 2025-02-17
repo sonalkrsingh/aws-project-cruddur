@@ -55,7 +55,10 @@ export default function ConfirmationPage() {
   
     try {
       console.log("Confirming signup for:", email); // Debugging
-      await confirmSignUp(username || email, code);  // ✅ Trim spaces just in case
+      await confirmSignUp({
+        username:email,
+        confirmationCode: code,
+      });  
       console.log("Confirmation successful!");
       window.location.href = "/";
     } catch (error) {
