@@ -4,7 +4,9 @@
 	"name": "Crudder Configuration",
 	"workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
 	"features": {
-		"ghcr.io/devcontainers/features/aws-cli:1": {}
+		"ghcr.io/devcontainers/features/aws-cli:1": {},
+		"ghcr.io/devcontainers/features/node:1": {},
+		"ghcr.io/devcontainers/features/postgres:1": {}
 	},
 	"remoteEnv":{
 		"AWS_CLI_AUTO_PROMPT":"on-partial"
@@ -21,7 +23,12 @@
 				"editor.fontsize" : 14
 			}
 		}
-	}
+	},
+	"runServices": ["backend-flask", "frontend-react-js", "postgres"], 
+	"postCreateCommand": "bash .devcontainer/setup.sh",
+	"forwardPorts": [3000, 4567, 2000],
+	"shutdownAction": "stopCompose"
+}
 
 	// Features to add to the dev container. More info: https://containers.dev/features.
 	// "features": {},
@@ -43,4 +50,4 @@
 
 	// Uncomment to connect as an existing user other than the container default. More info: https://aka.ms/dev-containers-non-root.
 	// "remoteUser": "devcontainer"
-}
+
