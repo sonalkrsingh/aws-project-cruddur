@@ -28,12 +28,12 @@ export default function SignupPage() {
 
     try {
         const { user } = await signUp({
-          username: username,
+          username: email,
           password: password,
           options: {
             userAttributes:{
-              email,
               name,
+              preferred_username: username,
             }
           },
           autoSignIn: { // optional - enables auto sign in after user is confirmed

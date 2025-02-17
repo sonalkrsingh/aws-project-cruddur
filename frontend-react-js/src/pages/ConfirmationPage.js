@@ -4,10 +4,11 @@ import { useParams } from 'react-router-dom';
 import {ReactComponent as Logo} from '../components/svg/logo.svg';
 
 // [TODO] Authenication
-import { Auth } from 'aws-amplify';
+import { confirmSignUp, resendSignUpCode } from '@aws-amplify/auth';
 
 export default function ConfirmationPage() {
   const [email, setEmail] = React.useState('');
+  const [username, setUsername] = React.useState('');
   const [code, setCode] = React.useState('');
   const [errors, setErrors] = React.useState('');
   const [codeSent, setCodeSent] = React.useState(false);
@@ -20,38 +21,50 @@ export default function ConfirmationPage() {
   const email_onchange = (event) => {
     setEmail(event.target.value);
   }
+  const username_onchange = (event) => {
+    setUsername(event.target.value);
+  }
 
   const resend_code = async (event) => {
-    setErrors('')
-    try {
-      await Auth.resendSignUp(email);
-      console.log('code resent successfully');
-      setCodeSent(true)
-    } catch (err) {
-      // does not return a code
-      // does cognito always return english
-      // for this to be an okay match?
-      console.log(err)
-      if (err.message == 'Username cannot be empty'){
-        setErrors("You need to provide an email in order to send Resend Activiation Code")   
-      } else if (err.message == "Username/client id combination not found."){
-        setErrors("Email is invalid or cannot be found.")   
-      }
-    }
-  }
-
+    setErrors('');
   
-const onsubmit = async (event) => {
-  event.preventDefault();
-  setErrors('')
-  try {
-    await Auth.confirmSignUp(email, code);
-    window.location.href = "/"
-  } catch (error) {
-    setErrors(error.message)
-  }
-  return false
-}
+    if (!email) {  // ✅ Ensure email is provided
+      setErrors("Email is required to resend the activation code.");
+      return;
+    }
+  
+    try {
+      await resendSignUpCode(email.trim()); // ✅ Trim spaces
+      console.log('Code resent successfully');
+      setCodeSent(true);
+    } catch (err) {
+      console.error(err);
+      setErrors(err.message);
+    }
+  };
+  
+  
+  const onsubmit = async (event) => {
+    event.preventDefault();
+    setErrors('');
+  
+    if (!email) {  // ✅ Ensure email is not empty
+      setErrors("Email is required for confirmation.");
+      return;
+    }
+  
+    try {
+      console.log("Confirming signup for:", email); // Debugging
+      await confirmSignUp(username || email, code);  // ✅ Trim spaces just in case
+      console.log("Confirmation successful!");
+      window.location.href = "/";
+    } catch (error) {
+      console.error(error);
+      setErrors(error.message);
+    }
+    return false;
+  };
+  
 
   let el_errors;
   if (errors){
@@ -66,12 +79,18 @@ const onsubmit = async (event) => {
     code_button = <button className="resend" onClick={resend_code}>Resend Activation Code</button>;
   }
 
-  React.useEffect(()=>{
+  React.useEffect(() => {
     if (params.email) {
-      setEmail(params.email)
+      setEmail(params.email);
+      console.log("Email set from URL params:", params.email);
     }
-  }, [])
+    if (params.username) {
+      setUsername(params.username);
+      console.log("Username set from URL params:", params.username);
+    }
+  }, [params]);
 
+  
   return (
     <article className="confirm-article">
       <div className='recover-info'>
