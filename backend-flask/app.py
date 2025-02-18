@@ -1,6 +1,7 @@
-from flask import Flask
+from flask import Flask,jsonify
 from flask import request
 from flask_cors import CORS, cross_origin
+#from flask_aws_cognito import FlaskAWSCognito
 import os
 
 from services.home_activities import *
@@ -80,13 +81,21 @@ RequestsInstrumentor().instrument()
 frontend = os.getenv('FRONTEND_URL')
 backend = os.getenv('BACKEND_URL')
 origins = [frontend, backend]
+
+# Updated CORS configuration
 cors = CORS(
-  app, 
-  resources={r"/api/*": {"origins": origins}},
-  expose_headers="location,link",
-  allow_headers="content-type,if-modified-since",
-  methods="OPTIONS,GET,HEAD,POST"
+    app, 
+    resources={r"/api/*": {"origins": frontend}},
+        methods= ["OPTIONS", "GET", "POST", "HEAD"],
+        allow_headers= ["Content-Type", "Authorization", "x-requested-with","If-Modified-Since",],
+        expose_headers= ["Authorization", "location", "link"],
+        supports_credentials= True
 )
+
+# Configure Cognito
+app.config['AWS_COGNITO_USER_POOL_ID'] = os.getenv('AWS_COGNITO_USER_POOL_ID')
+app.config['AWS_COGNITO_USER_POOL_CLIENT_ID'] = os.getenv('AWS_COGNITO_USER_POOL_CLIENT_ID')
+app.config['AWS_DEFAULT_REGION'] = os.getenv('AWS_DEFAULT_REGION')
 
 #CloudWatch Logs ---------
 #@app.after_request
@@ -159,8 +168,24 @@ def data_create_message():
 @app.route("/api/activities/home", methods=['GET'])
 #@xray_recorder.capture('activities_home')
 def data_home():
-  data = HomeActivities.run()
-  return data, 200
+    response = jsonify({'message': 'Home data'})
+    response.headers.add("Access-Control-Allow-Origin", frontend) 
+    response.headers.add("Access-Control-Allow-Headers", "Authorization, Content-Type")  
+    response.headers.add("Access-Control-Allow-Methods", "GET, POST, OPTIONS")  
+    response.headers.add("Access-Control-Allow-Credentials", "true") 
+    data = HomeActivities.run()  # Your existing function
+    return data, 200
+
+@app.route("/api/activities/home", methods=['OPTIONS'])
+@cross_origin()  
+def options_home():
+    response = jsonify({"message": "CORS Preflight Passed"})
+    response.headers.add("Access-Control-Allow-Origin", frontend)
+    response.headers.add("Access-Control-Allow-Headers", "Authorization, Content-Type")
+    response.headers.add("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+    response.headers.add("Access-Control-Allow-Credentials", "true")
+    return response, 204  
+
 
 @app.route("/api/activities/notifications", methods=['GET'])
 def data_notifications():
