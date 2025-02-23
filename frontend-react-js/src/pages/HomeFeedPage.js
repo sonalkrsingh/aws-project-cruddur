@@ -8,7 +8,7 @@ import ActivityForm from '../components/ActivityForm';
 import ReplyForm from '../components/ReplyForm';
 
 //aws-ampilfy
-import { getCurrentUser } from '@aws-amplify/auth';
+import { getCurrentUser, fetchUserAttributes  } from '@aws-amplify/auth';
 
 export default function HomeFeedPage() {
   const [activities, setActivities] = React.useState([]);
@@ -42,10 +42,16 @@ export default function HomeFeedPage() {
 const checkAuth = async () => {
   try {
     const cognito_user = await getCurrentUser();
+    console.log("Cognito User:", cognito_user);
+
+    const userAttributes = await fetchUserAttributes();
+    console.log("User Attributes:", userAttributes);
+
     setUser({
-      display_name: cognito_user.signInDetails.loginId || "My Name",
-      handle: cognito_user.username || "handle"
+      display_name: userAttributes.preferred_username || userAttributes.name || cognito_user.signInDetails?.loginId || "My Name",
+      handle: userAttributes.preferred_username || cognito_user.username || "handle"
     });
+
   } catch (err) {
     console.log("Error fetching user:", err);
   }

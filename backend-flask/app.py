@@ -85,7 +85,7 @@ origins = [frontend, backend]
 # Updated CORS configuration
 cors = CORS(
     app, 
-    resources={r"/api/*": {"origins": frontend}},
+    resources={r"/api/*": {"origins": origins}},
         methods= ["OPTIONS", "GET", "POST", "HEAD"],
         allow_headers= ["Content-Type", "Authorization", "x-requested-with","If-Modified-Since",],
         expose_headers= ["Authorization", "location", "link"],
@@ -169,7 +169,7 @@ def data_create_message():
 #@xray_recorder.capture('activities_home')
 def data_home():
     response = jsonify({'message': 'Home data'})
-    response.headers.add("Access-Control-Allow-Origin", frontend) 
+    response.headers.add("Access-Control-Allow-Origin", origins) 
     response.headers.add("Access-Control-Allow-Headers", "Authorization, Content-Type")  
     response.headers.add("Access-Control-Allow-Methods", "GET, POST, OPTIONS")  
     response.headers.add("Access-Control-Allow-Credentials", "true") 
@@ -180,7 +180,7 @@ def data_home():
 @cross_origin()  
 def options_home():
     response = jsonify({"message": "CORS Preflight Passed"})
-    response.headers.add("Access-Control-Allow-Origin", frontend)
+    response.headers.add("Access-Control-Allow-Origin", origins)
     response.headers.add("Access-Control-Allow-Headers", "Authorization, Content-Type")
     response.headers.add("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
     response.headers.add("Access-Control-Allow-Credentials", "true")

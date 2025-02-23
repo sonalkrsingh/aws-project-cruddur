@@ -35,7 +35,18 @@ export default function SigninPage() {
       const session = await fetchAuthSession();
       
       console.log("Session Retrieved:", session);
+
+      const userInfo = await getCurrentUser();
+    
+      console.log("User Info:", userInfo);
   
+      // Extract username or preferred username
+      const username = userInfo.signInDetails?.loginId || 
+                       userInfo.attributes?.preferred_username || 
+                       userInfo.attributes?.name || 
+                       userInfo.username;
+    // Store in localStorage
+      localStorage.setItem("username", username);  
       if (session?.tokens?.idToken) {
         localStorage.setItem("access_token", session.tokens.idToken);
         window.location.href = "/";
