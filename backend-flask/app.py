@@ -4,6 +4,7 @@ from flask_cors import CORS, cross_origin
 #from flask_aws_cognito import FlaskAWSCognito
 import os
 import sys
+import time
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), 'services')))
 
@@ -181,13 +182,20 @@ def data_create_message():
 #@xray_recorder.capture('activities_home')
 def data_home():
     access_token = extract_access_token(request.headers)
+    current_time = int(time.time())
     try:
-      claims = cognito_jwt_token.verify(access_token)
+      claims = cognito_jwt_token.verify(access_token,current_time)
       # authenicatied request
       app.logger.debug("authenicated")
       app.logger.debug(f"Claims received: {claims}")
       app.logger.debug(claims['username'])
-      data = HomeActivities.run(cognito_user_id=claims['username'])
+
+      username = claims.get('cognito:username') or claims.get('sub') or claims.get('username')
+      if not username:
+            raise TokenVerifyError("No username found in token claims")
+            
+      app.logger.debug("Authenticated user: %s", username)
+      #data = HomeActivities.run(cognito_user_id=username)
     except TokenVerifyError as e:
       
       response = jsonify({'message': 'Home data'})

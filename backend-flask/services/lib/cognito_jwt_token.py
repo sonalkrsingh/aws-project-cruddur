@@ -97,13 +97,33 @@ class CognitoJwtToken:
     def _check_audience(self, claims: dict) -> None:
         # and the Audience  (use claims['client_id'] if verifying an access token)
         audience = claims.get("aud", claims.get("client_id"))
+        if not audience:
+            raise TokenVerifyError("Token is missing audience claim")
         if audience != self.user_pool_client_id:
-            raise TokenVerifyError(f"Invalid audience: {audience}")
+            raise TokenVerifyError(
+                f"Token was not issued for this audience. "
+                f"Expected {self.user_pool_client_id}, got {audience}"
+        )
 
-    def verify(self, token, current_time=None):
+    def get_user_id(self, claims: dict) -> str:
+        """
+        Extract the user identifier from token claims.
+        Cognito tokens can have the username in different fields depending on the token type.
+        """
+        username = claims.get('cognito:username')
+        if username:
+            return username
+            
+        # Check other possible fields
+        username = claims.get('username') or claims.get('sub') or claims.get('email')
+        if not username:
+            raise TokenVerifyError("No username found in token claims")
+        return username
+
+    def verify(self, token, current_time= None):
         """ https://github.com/awslabs/aws-support-tools/blob/master/Cognito/decode-verify-jwt/decode-verify-jwt.py """
         if not token or not isinstance(token, str):
-            raise TokenVerifyError("Invalid token provided")
+            raise TokenVerifyError("Invalid token provided")    
 
         headers = self._extract_headers(token)
         pkey_data = self._find_pkey(headers)
@@ -112,6 +132,9 @@ class CognitoJwtToken:
         claims = self._extract_claims(token)
         self._check_expiration(claims, current_time)
         self._check_audience(claims)
+
+        # Add username to claims in a standardized way
+        claims['username'] = self.get_user_id(claims)
 
         self.claims = claims 
         return claims
