@@ -23,3 +23,4 @@ Flask-AWSCognito
 requests
 python-jose
 
+psycopg[binary,pool]
