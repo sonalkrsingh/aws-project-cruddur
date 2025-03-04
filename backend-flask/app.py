@@ -5,13 +5,15 @@ from flask_cors import CORS, cross_origin
 import os
 import sys
 import time
+from datetime import datetime, timedelta, timezone
+
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), 'services')))
 
 from services.home_activities import *
 from services.notifications_activities import *
 from services.user_activities import *
-from services.create_activity import *
+from services.create_activity import CreateActivity
 from services.create_reply import *
 from services.search_activities import *
 from services.message_groups import *
@@ -56,11 +58,11 @@ from flask.signals import got_request_exception
 
 #HoneyComb
 # Initialize tracing and an exporter that can send data to Honeycomb
-provider = TracerProvider()
-processor = BatchSpanProcessor(OTLPSpanExporter())
-provider.add_span_processor(processor)
-trace.set_tracer_provider(provider)
-tracer = trace.get_tracer(__name__)
+#provider = TracerProvider()
+#processor = BatchSpanProcessor(OTLPSpanExporter())
+#provider.add_span_processor(processor)
+#trace.set_tracer_provider(provider)
+#tracer = trace.get_tracer(__name__)
 
 #x-ray------
 #xray_url = os.getenv("AWS_XRAY_URL")
@@ -71,8 +73,8 @@ tracer = trace.get_tracer(__name__)
 #simple_processor = SimpleSpanProcessor(ConsoleSpanExporter())
 #provider.add_span_processor(simple_processor)
 
-trace.set_tracer_provider(provider)
-tracer = trace.get_tracer(__name__)
+#trace.set_tracer_provider(provider)
+#tracer = trace.get_tracer(__name__)
 
 app = Flask(__name__)
 
@@ -217,7 +219,11 @@ def options_home():
     response.headers.add("Access-Control-Allow-Credentials", "true")
     return response, 204  
 
-
+@app.route("/api/activities", methods=['OPTIONS'])
+@cross_origin()
+def options_activities():
+    return '', 204  # Correct CORS preflight response
+ 
 @app.route("/api/activities/notifications", methods=['GET'])
 def data_notifications():
   data = NotificationsActivities.run()
@@ -245,15 +251,93 @@ def data_search():
 @app.route("/api/activities", methods=['POST','OPTIONS']) 
 @cross_origin()
 def data_activities():
-  user_handle  = 'andrewbrown'
-  message = request.json['message']
-  ttl = request.json['ttl']
-  model = CreateActivity.run(message, user_handle, ttl)
-  if model['errors'] is not None:
-    return model['errors'], 422
-  else:
-    return model['data'], 200
-  return
+    try:
+        access_token=request.headers.get("Authorization", "").replace("Bearer ", "")
+        if not access_token:
+            app.logger.error("No access token provided in headers")
+            return jsonify({"error": "User not authenticated"}), 401
+        
+        app.logger.debug(f"Received Token: {access_token}")
+
+        print(f"Received handle: {request.json.get('handle')}")
+
+
+        current_time = int(time.time())
+
+
+
+        # Verify the JWT token with Cognito
+        claims = cognito_jwt_token.verify(access_token, current_time)
+        user_handle = claims.get('cognito:username') or claims.get('sub') or claims.get('username')
+
+        if not user_handle:
+            raise TokenVerifyError("No username found in token claims")
+
+        cognito_user_id = claims.get('sub')
+
+        if not cognito_user_id:
+          app.logger.error("No Cognito user ID found in token")
+          return jsonify({"error": "User not authenticated"}), 401
+
+        sql = "SELECT uuid FROM public.users WHERE cognito_user_id = %s"
+        user_uuid = db.query_commit(sql, (cognito_user_id,))
+
+        if not user_uuid:
+            app.logger.error(f"User not found in DB for Cognito ID: {cognito_user_id}")
+            return jsonify({"error": "User not registered"}), 400
+
+        message = request.json.get('message', '')  # Use .get() to avoid KeyError
+        ttl = request.json.get('ttl', None)
+
+        if not message:  # Ensure message is not empty
+            return jsonify({"error": "Message cannot be empty"}), 400
+
+        # Use the correct UUID for inserting into `activities`
+        create_activity_sql = """
+            INSERT INTO public.activities (user_uuid, message, expires_at)
+            VALUES (%s, %s, %s)
+            RETURNING uuid;
+        """
+        # Convert TTL string to timestamp
+        ttl_mapping = {
+            '30-days': timedelta(days=30),
+            '7-days': timedelta(days=7),
+            '3-days': timedelta(days=3),
+            '1-day': timedelta(days=1),
+            '12-hours': timedelta(hours=12),
+            '3-hours': timedelta(hours=3),
+            '1-hour': timedelta(hours=1)
+        }
+
+        now = datetime.now(timezone.utc)
+
+        # Validate TTL and convert it to timestamp
+        ttl_offset = ttl_mapping.get(ttl)
+        if ttl_offset:
+            expires_at = now + ttl_offset
+        else:
+            expires_at = None  # Or return an error response
+
+        activity_uuid = db.query_commit(create_activity_sql, (user_uuid, message, expires_at))
+
+        if not activity_uuid:
+            app.logger.error("Activity creation failed")
+            return jsonify({"error": "Failed to create activity"}), 500
+
+        return jsonify({"activity_uuid": activity_uuid}), 200
+    except Exception as e:
+        app.logger.error(f"Error in data_activities: {str(e)}")
+        return jsonify({"error": "Internal Server Error"}), 500
+
+        #model = CreateActivity.run(message, user_uuid, ttl)
+
+        #if not model or 'errors' in model:
+            #return jsonify({"error": "Failed to create activity"}), 500
+        
+        #return jsonify(model['data']), 200
+    #except Exception as e:
+        #app.logger.error(f"Error in data_activities: {str(e)}")
+        #return jsonify({"error": "Internal Server Error"}), 500
 
 @app.route("/api/activities/<string:activity_uuid>", methods=['GET'])
 #@xray_recorder.capture('activities_show')

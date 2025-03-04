@@ -24,7 +24,6 @@ tasks:
 vscode:
   extensions:
     - 42Crunch.vscode-openapi
-    - cweijan.dbclient-jdbc
 
 ports:
   - name: frontend

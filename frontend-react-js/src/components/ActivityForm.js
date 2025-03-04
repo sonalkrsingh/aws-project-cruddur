@@ -18,18 +18,33 @@ export default function ActivityForm(props) {
     event.preventDefault();
     try {
       const backend_url = `${process.env.REACT_APP_BACKEND_URL}/api/activities`
+      const token = localStorage.getItem("access_token");
+
+      if (!token) {
+        console.error("No access token found! Authentication might have failed.");
+        return;
+      }
+
       console.log('onsubmit payload', message)
+
+      console.log("User handle being sent:", props.user?.handle); // Debugging
+
+      console.log("User object in ActivityForm:", props.user);
+
       const res = await fetch(backend_url, {
         method: "POST",
         headers: {
           'Accept': 'application/json',
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
+          user_uuid: props.user?.uuid, 
           message: message,
           ttl: ttl
         }),
       });
+
       let data = await res.json();
       if (res.status === 200) {
         // add activity to the feed
@@ -40,10 +55,10 @@ export default function ActivityForm(props) {
         setTtl('7-days')
         props.setPopped(false)
       } else {
-        console.log(res)
+        console.error("Failed to post activity:", res);
       }
     } catch (err) {
-      console.log(err);
+      console.error("Error posting activity:", err);
     }
   }
 

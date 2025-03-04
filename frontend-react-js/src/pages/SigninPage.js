@@ -18,6 +18,16 @@ export default function SigninPage() {
   const onsubmit = async (event) => { 
     setErrors('');
     event.preventDefault();
+
+    try {
+      const existingUser = await getCurrentUser();
+      if (existingUser) {
+        console.log("User already signed in:", existingUser);
+        return;  // Avoid signing in ag ain
+      }
+    } catch (err) {
+      console.log("No user signed in, proceeding with sign-in...");
+    }
   
     try {
       console.log("Signing in user...");
