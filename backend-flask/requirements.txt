@@ -17,3 +17,10 @@ watchtower
 #Rollbar
 blinker
 rollbar
+
+Flask-AWSCognito
+
+requests
+python-jose
+
+psycopg[binary,pool]

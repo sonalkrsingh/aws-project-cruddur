@@ -3,17 +3,25 @@ from flask import request
 from flask_cors import CORS, cross_origin
 #from flask_aws_cognito import FlaskAWSCognito
 import os
+import sys
+import time
+from datetime import datetime, timedelta, timezone
+
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), 'services')))
 
 from services.home_activities import *
 from services.notifications_activities import *
 from services.user_activities import *
-from services.create_activity import *
+from services.create_activity import CreateActivity
 from services.create_reply import *
 from services.search_activities import *
 from services.message_groups import *
 from services.messages import *
 from services.create_message import *
 from services.show_activity import *
+
+from lib.cognito_jwt_token import CognitoJwtToken, extract_access_token, TokenVerifyError
 
 #honeycomb-----
 from opentelemetry import trace
@@ -50,11 +58,11 @@ from flask.signals import got_request_exception
 
 #HoneyComb
 # Initialize tracing and an exporter that can send data to Honeycomb
-provider = TracerProvider()
-processor = BatchSpanProcessor(OTLPSpanExporter())
-provider.add_span_processor(processor)
-trace.set_tracer_provider(provider)
-tracer = trace.get_tracer(__name__)
+#provider = TracerProvider()
+#processor = BatchSpanProcessor(OTLPSpanExporter())
+#provider.add_span_processor(processor)
+#trace.set_tracer_provider(provider)
+#tracer = trace.get_tracer(__name__)
 
 #x-ray------
 #xray_url = os.getenv("AWS_XRAY_URL")
@@ -65,10 +73,17 @@ tracer = trace.get_tracer(__name__)
 #simple_processor = SimpleSpanProcessor(ConsoleSpanExporter())
 #provider.add_span_processor(simple_processor)
 
-trace.set_tracer_provider(provider)
-tracer = trace.get_tracer(__name__)
+#trace.set_tracer_provider(provider)
+#tracer = trace.get_tracer(__name__)
 
 app = Flask(__name__)
+
+cognito_jwt_token = CognitoJwtToken(
+  user_pool_id=os.getenv('AWS_COGNITO_USER_POOL_ID'), 
+  user_pool_client_id=os.getenv('AWS_COGNITO_USER_POOL_CLIENT_ID'),
+  region=os.getenv('AWS_DEFAULT_REGION')
+)
+
 
 #X-RAY --------------
 #XRayMiddleware(app, xray_recorder)
@@ -85,7 +100,7 @@ origins = [frontend, backend]
 # Updated CORS configuration
 cors = CORS(
     app, 
-    resources={r"/api/*": {"origins": frontend}},
+    resources={r"/api/*": {"origins": origins}},
         methods= ["OPTIONS", "GET", "POST", "HEAD"],
         allow_headers= ["Content-Type", "Authorization", "x-requested-with","If-Modified-Since",],
         expose_headers= ["Authorization", "location", "link"],
@@ -168,25 +183,47 @@ def data_create_message():
 @app.route("/api/activities/home", methods=['GET'])
 #@xray_recorder.capture('activities_home')
 def data_home():
-    response = jsonify({'message': 'Home data'})
-    response.headers.add("Access-Control-Allow-Origin", frontend) 
-    response.headers.add("Access-Control-Allow-Headers", "Authorization, Content-Type")  
-    response.headers.add("Access-Control-Allow-Methods", "GET, POST, OPTIONS")  
-    response.headers.add("Access-Control-Allow-Credentials", "true") 
-    data = HomeActivities.run()  # Your existing function
+    access_token = extract_access_token(request.headers)
+    current_time = int(time.time())
+    try:
+      claims = cognito_jwt_token.verify(access_token,current_time)
+      # authenicatied request
+      app.logger.debug("authenicated")
+      app.logger.debug(f"Claims received: {claims}")
+      app.logger.debug(claims['username'])
+
+      username = claims.get('cognito:username') or claims.get('sub') or claims.get('username')
+      if not username:
+            raise TokenVerifyError("No username found in token claims")
+            
+      app.logger.debug("Authenticated user: %s", username)
+      #data = HomeActivities.run(cognito_user_id=username)
+    except TokenVerifyError as e:
+      
+      response = jsonify({'message': 'Home data'})
+      response.headers.add("Access-Control-Allow-Origin", origins) 
+      response.headers.add("Access-Control-Allow-Headers", "Authorization, Content-Type")  
+      response.headers.add("Access-Control-Allow-Methods", "GET, POST, OPTIONS")  
+      response.headers.add("Access-Control-Allow-Credentials", "true") 
+
+    data = HomeActivities.run()  
     return data, 200
 
 @app.route("/api/activities/home", methods=['OPTIONS'])
 @cross_origin()  
 def options_home():
     response = jsonify({"message": "CORS Preflight Passed"})
-    response.headers.add("Access-Control-Allow-Origin", frontend)
+    response.headers.add("Access-Control-Allow-Origin", origins)
     response.headers.add("Access-Control-Allow-Headers", "Authorization, Content-Type")
     response.headers.add("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
     response.headers.add("Access-Control-Allow-Credentials", "true")
     return response, 204  
 
-
+@app.route("/api/activities", methods=['OPTIONS'])
+@cross_origin()
+def options_activities():
+    return '', 204  # Correct CORS preflight response
+ 
 @app.route("/api/activities/notifications", methods=['GET'])
 def data_notifications():
   data = NotificationsActivities.run()
@@ -214,15 +251,65 @@ def data_search():
 @app.route("/api/activities", methods=['POST','OPTIONS']) 
 @cross_origin()
 def data_activities():
-  user_handle  = 'andrewbrown'
-  message = request.json['message']
-  ttl = request.json['ttl']
-  model = CreateActivity.run(message, user_handle, ttl)
-  if model['errors'] is not None:
-    return model['errors'], 422
-  else:
-    return model['data'], 200
-  return
+    try:
+        access_token=request.headers.get("Authorization", "").replace("Bearer ", "")
+        if not access_token:
+            app.logger.error("No access token provided in headers")
+            return jsonify({"error": "User not authenticated"}), 401
+        
+        app.logger.debug(f"Received Token: {access_token}")
+
+        print(f"Received handle: {request.json.get('handle')}")
+
+
+        current_time = int(time.time())
+
+
+
+        # Verify the JWT token with Cognito
+        claims = cognito_jwt_token.verify(access_token, current_time)
+        user_handle = claims.get('cognito:username') or claims.get('sub') or claims.get('username')
+
+        if not user_handle:
+            raise TokenVerifyError("No username found in token claims")
+
+        cognito_user_id = claims.get('sub')
+
+        if not cognito_user_id:
+          app.logger.error("No Cognito user ID found in token")
+          return jsonify({"error": "User not authenticated"}), 401
+
+        sql = "SELECT uuid FROM public.users WHERE cognito_user_id = %s"
+        user_uuid = db.query_commit(sql, (cognito_user_id,))
+
+        user_uuid = str(user_uuid) if user_uuid else None
+
+        if not user_uuid:
+            app.logger.error(f"User not found in DB for Cognito ID: {cognito_user_id}")
+            return jsonify({"error": "User not registered"}), 400
+
+        message = request.json.get('message', '')  # Use .get() to avoid KeyError
+        ttl = request.json.get('ttl', None)
+
+        if not message:  # Ensure message is not empty
+            return jsonify({"error": "Message cannot be empty"}), 400
+
+        # Use the correct UUID for inserting into `activities`
+        create_activity_sql = """
+            INSERT INTO public.activities (user_uuid, message, expires_at)
+            VALUES (%s, %s, %s)
+            RETURNING uuid;
+        """
+
+        model = CreateActivity.run(message, user_uuid, ttl)
+
+        if not model or 'errors' in model:
+            return jsonify({"error": "Failed to create activity"}), 500
+        
+        return jsonify(model['data']), 200
+    except Exception as e:
+        app.logger.error(f"Error in data_activities: {str(e)}")
+        return jsonify({"error": "Internal Server Error"}), 500
 
 @app.route("/api/activities/<string:activity_uuid>", methods=['GET'])
 #@xray_recorder.capture('activities_show')
