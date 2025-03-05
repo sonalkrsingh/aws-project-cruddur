@@ -282,6 +282,8 @@ def data_activities():
         sql = "SELECT uuid FROM public.users WHERE cognito_user_id = %s"
         user_uuid = db.query_commit(sql, (cognito_user_id,))
 
+        user_uuid = str(user_uuid) if user_uuid else None
+
         if not user_uuid:
             app.logger.error(f"User not found in DB for Cognito ID: {cognito_user_id}")
             return jsonify({"error": "User not registered"}), 400
@@ -298,46 +300,16 @@ def data_activities():
             VALUES (%s, %s, %s)
             RETURNING uuid;
         """
-        # Convert TTL string to timestamp
-        ttl_mapping = {
-            '30-days': timedelta(days=30),
-            '7-days': timedelta(days=7),
-            '3-days': timedelta(days=3),
-            '1-day': timedelta(days=1),
-            '12-hours': timedelta(hours=12),
-            '3-hours': timedelta(hours=3),
-            '1-hour': timedelta(hours=1)
-        }
 
-        now = datetime.now(timezone.utc)
+        model = CreateActivity.run(message, user_uuid, ttl)
 
-        # Validate TTL and convert it to timestamp
-        ttl_offset = ttl_mapping.get(ttl)
-        if ttl_offset:
-            expires_at = now + ttl_offset
-        else:
-            expires_at = None  # Or return an error response
-
-        activity_uuid = db.query_commit(create_activity_sql, (user_uuid, message, expires_at))
-
-        if not activity_uuid:
-            app.logger.error("Activity creation failed")
+        if not model or 'errors' in model:
             return jsonify({"error": "Failed to create activity"}), 500
-
-        return jsonify({"activity_uuid": activity_uuid}), 200
+        
+        return jsonify(model['data']), 200
     except Exception as e:
         app.logger.error(f"Error in data_activities: {str(e)}")
         return jsonify({"error": "Internal Server Error"}), 500
-
-        #model = CreateActivity.run(message, user_uuid, ttl)
-
-        #if not model or 'errors' in model:
-            #return jsonify({"error": "Failed to create activity"}), 500
-        
-        #return jsonify(model['data']), 200
-    #except Exception as e:
-        #app.logger.error(f"Error in data_activities: {str(e)}")
-        #return jsonify({"error": "Internal Server Error"}), 500
 
 @app.route("/api/activities/<string:activity_uuid>", methods=['GET'])
 #@xray_recorder.capture('activities_show')

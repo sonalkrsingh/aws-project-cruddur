@@ -33,8 +33,8 @@ class CreateActivity:
         if ttl_offset is None:
             model['errors'].append('Invalid TTL value')
 
-        # Validate user_handle
-        if not user_uuid or len(user_uuid.strip()) == 0:
+        # Validate user_uuid
+        if not user_uuid or len(str(user_uuid).strip()) == 0:
             model['errors'].append('User handle cannot be empty')
 
         # Validate message
@@ -62,7 +62,7 @@ class CreateActivity:
 
             model['data'] = object_json
         except Exception as e:
-            current_app.logger.error(f'Error in CreateActivity: {str(e)}')
+            current_app.logger.error(f'Error in CreateActivity: {str(e)}', exc_info=True)
             model['errors'].append(f'Database error: {str(e)}')
 
         return model
@@ -95,15 +95,41 @@ class CreateActivity:
             return None
 
     @staticmethod
+    def query_object_activity(uuid):
+        sql = db.template('activities','object')
+        current_app.logger.info(f"Generated SQL: {sql}")
+        current_app.logger.info(f"Fetching activity with UUID: {uuid}")
+
+        result = db.query_object_json(sql, {'uuid': uuid})
+
+        if not result:
+            current_app.logger.error(f"No activity found for UUID: {uuid}")
+            return {}
+
+        return result
+
+    @staticmethod
     def query_object_json(sql, params={}):
-        logger.info(f"Executing SQL: {sql}")
-        logger.info(f"Query Params: {params}")
+        try:
+            logger.info(f"Executing SQL: {sql}")
+            logger.info(f"Query Params: {params}")
 
-        wrapped_sql = db.query_wrap_object(sql)
-        logger.error(f"SQL Executed: {sql} with params: {params}")
+            wrapped_sql = db.query_wrap_object(sql)
+            logger.info(f"Final Executed SQL: {wrapped_sql} with params {params}")
 
-        with db.pool.connection() as conn:
-            with conn.cursor() as cur:
-                cur.execute(wrapped_sql, params)    
-                json = cur.fetchone()
-                return json[0] if json else "{}"
+            with db.pool.connection() as conn:
+                with conn.cursor() as cur:
+                    cur.execute(wrapped_sql, params)    
+                    json = cur.fetchone()
+
+                    if json is None or json[0] is None:
+                        logger.error(f"No results for UUID: {params.get('uuid')}")
+                        return {}
+
+                    logger.info(f"Query Result: {json[0]}")
+                    return json[0] if json and json[0] else {}
+
+        except Exception as e:
+            logger.error(f"Error in query_object_json: {str(e)}", exc_info=True) 
+            return {}
+
