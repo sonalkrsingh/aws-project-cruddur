@@ -24,3 +24,5 @@ requests
 python-jose
 
 psycopg[binary,pool]
+
+python-dotenv

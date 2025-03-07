@@ -6,6 +6,7 @@ import os
 import sys
 import time
 from datetime import datetime, timedelta, timezone
+from dotenv import load_dotenv
 
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), 'services')))
@@ -75,6 +76,8 @@ from flask.signals import got_request_exception
 
 #trace.set_tracer_provider(provider)
 #tracer = trace.get_tracer(__name__)
+
+load_dotenv()
 
 app = Flask(__name__)
 

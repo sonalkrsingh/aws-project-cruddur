@@ -17,4 +17,6 @@ else
   URL=$CONNECTION_URL
 fi
 
+echo "Using connection URL: $URL"
+
 psql $URL cruddur < $schema_path
