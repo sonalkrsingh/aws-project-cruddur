@@ -26,3 +26,8 @@ python-jose
 psycopg[binary,pool]
 
 python-dotenv
+
+boto3
+python-dateutil
+
+momento

@@ -12,6 +12,9 @@ class Db:
   def init_pool(self):
         if self.pool is None:
             connection_url = os.getenv("CONNECTION_URL")
+            print("🔍 CONNECTION_URL:", connection_url)
+            if not connection_url:
+              raise ValueError("❌ CONNECTION_URL is not set!")
             self.pool = ConnectionPool(connection_url, min_size=1, max_size=10)  # Limit pool size
 
   def template(self,*args):
@@ -28,10 +31,7 @@ class Db:
     with open(template_path, 'r') as f:
       template_content = f.read()
     return template_content
-
-  def init_pool(self):
-    connection_url = os.getenv("CONNECTION_URL")
-    self.pool = ConnectionPool(connection_url)
+  
   # we want to commit data such as an insert
   # be sure to check for RETURNING in all uppercases
   def print_params(self,params):
@@ -113,4 +113,12 @@ class Db:
       if hasattr(err, 'pgcode'):
           print("📌 pgcode:", err.pgcode)
 
+  def close_pool(self):
+    if self.pool:
+        self.pool.close()
+        self.pool = None
+
 db = Db()
+
+db.close_pool()
+
