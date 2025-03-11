@@ -30,4 +30,4 @@ python-dotenv
 boto3
 python-dateutil
 
-momento
+psycopg_pool

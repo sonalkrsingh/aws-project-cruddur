@@ -23,6 +23,8 @@ if len(sys.argv) == 2:
     attrs = {}
 ddb = boto3.client('dynamodb',**attrs)
 
+print(f"🔍 db.pool: {db.pool}")
+
 def get_user_uuids():
   sql = """
     SELECT 
@@ -62,11 +64,14 @@ def create_message_group(client,message_group_uuid, my_user_uuid, last_message_a
     'user_handle': {'S': other_user_handle}
   }
 
-  response = client.put_item(
-    TableName=table_name,
-    Item=record
-  )
+  print("📌 Inserting item:", record)
+  try:
+      response = client.put_item(TableName=table_name, Item=record)
+      print("✅ DynamoDB Response:", response)
+  except Exception as e:
+      print(f"🔥 DynamoDB Insert Error: {e}")
   print(response)
+  print("✅ DynamoDB Response:", response)
 
 def create_message(client,message_group_uuid, created_at, message, my_user_uuid, my_user_display_name, my_user_handle):
   table_name = 'cruddur-messages'
