@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from datetime import datetime
 import boto3
 import sys
 import json
@@ -13,8 +14,14 @@ print("✅ sys.path:", sys.path)
 
 from lib.db import db
 
+# Check if running inside a Docker container
+running_in_docker = os.path.exists('/.dockerenv')
+
+# Use the correct endpoint based on environment
+endpoint_url = 'http://dynamodb-local:8000' if running_in_docker else 'http://localhost:8000'
+
 attrs = {
-  'endpoint_url': 'http://localhost:8000'
+  'endpoint_url': endpoint_url
 }
 
 if len(sys.argv) == 2:
@@ -39,12 +46,15 @@ def get_my_user_uuid():
 
 my_user_uuid = get_my_user_uuid()
 print(f"my-uuid: {my_user_uuid}")
+year = str(datetime.now().year)
 
 # define the query parameters
 query_params = {
   'TableName': table_name,
-  'KeyConditionExpression': 'pk = :pk',
+  'KeyConditionExpression': 'pk = :pk AND begins_with(sk,:year)',
+  'ScanIndexForward': False,
   'ExpressionAttributeValues': {
+    ':year': {'S': year },
     ':pk': {'S': f"GRP#{my_user_uuid}"}
   },
   'ReturnConsumedCapacity': 'TOTAL'

@@ -1,0 +1,45 @@
+#!/usr/bin/env python
+
+import boto3
+import os
+import json
+from dotenv import load_dotenv
+
+load_dotenv()
+
+# Ensure the AWS region is set correctly
+region = os.getenv("AWS_DEFAULT_REGION", "ap-south-1")
+
+# Initialize the Cognito Identity Provider client
+client = boto3.client('cognito-idp', region_name=region)
+
+userpool_id = os.getenv("AWS_COGNITO_USER_POOL_ID")
+if not userpool_id:
+    raise ValueError("AWS_COGNITO_USER_POOL_ID environment variable is not set")
+
+params = {
+  'UserPoolId': userpool_id,
+  'AttributesToGet': [
+      'preferred_username',
+      'sub'
+  ]
+}
+
+try:
+  response = client.list_users(**params)
+  users = response['Users']
+
+  print(json.dumps(users, sort_keys=True, indent=2, default=str))
+
+  dict_users = {}
+  for user in users:
+    attrs = user['Attributes']
+    sub    = next((a for a in attrs if a["Name"] == 'sub'), None)
+    handle = next((a for a in attrs if a["Name"] == 'preferred_username'), None)
+    if handle and sub:
+            dict_users[handle['Value']] = sub['Value']
+
+  print(json.dumps(dict_users, sort_keys=True, indent=2, default=str))
+
+except Exception as e:
+    print(f"Error: {e}")

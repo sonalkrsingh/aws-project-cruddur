@@ -59,6 +59,7 @@ class Db:
     print(sql,params)
 
   def query_commit(self, sql, params):
+    self.print_sql('commit with returning',sql,params)
     try:
         with self.pool.connection() as conn:
             with conn.cursor() as cur:
