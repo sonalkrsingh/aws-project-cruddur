@@ -9,7 +9,7 @@ services:
     volumes:
       - ./backend-flask:/backend-flask
     networks:
-      - cruddur 
+      - cruddur-net 
   frontend-react-js:
     env_file:
       - .env
@@ -19,7 +19,7 @@ services:
     volumes:
       - ./frontend-react-js:/frontend-react-js
     networks:
-      - cruddur 
+      - cruddur-net 
   dynamodb-local:
     # https://stackoverflow.com/questions/67533058/persist-local-dynamodb-data-in-volumes-lack-permission-unable-to-open-databa
     # We needed to add user:root to get this working.
@@ -33,7 +33,7 @@ services:
       - "./docker/dynamodb:/home/dynamodblocal/data"
     working_dir: /home/dynamodblocal
     networks:
-      - cruddur
+      - cruddur-net
   db:
     image: postgres:13-alpine
     restart: always
@@ -45,7 +45,7 @@ services:
     volumes: 
       - db:/var/lib/postgresql/data
     networks:
-      - cruddur 
+      - cruddur-net 
   xray-daemon:
     image: "amazon/aws-xray-daemon"
     environment:
@@ -56,13 +56,15 @@ services:
       - "xray -o -b xray-daemon:2000"
     ports:
       - 2000:2000/udp
+    networks:
+      - cruddur-net
 
 # the name flag is a hack to change the default prepend folder
 # name when outputting the image names
 networks: 
-  cruddur:
+  cruddur-net:
     driver: bridge
-    name: cruddur
+    name: cruddur-net
 
 volumes:
   db:

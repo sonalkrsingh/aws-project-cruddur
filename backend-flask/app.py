@@ -143,6 +143,10 @@ def init_rollbar():
 with app.app_context():
     init_rollbar()
 
+@app.route('/api/health-check', methods=['GET'])
+def health_check():
+  return {'success': True}, 200
+
 #Rollbar
 @app.route('/rollbar/test')
 def rollbar_test():

@@ -8,14 +8,25 @@ const checkAuth = async (setUser) => {
     const userAttributes = await fetchUserAttributes();
     console.log("User Attributes:", userAttributes);
 
-    const session = await fetchAuthSession();
-    const accessToken = session.tokens?.accessToken?.toString(); // Extract the access token
+    let session = await fetchAuthSession();
+    let accessToken = session.tokens?.accessToken?.toString(); // Extract the access token
+
+    if (!accessToken || isTokenExpired(accessToken)) {
+      console.log("Token expired or invalid. Refreshing...");
+      session = await fetchAuthSession({ forceRefresh: true });
+      accessToken = session.tokens?.accessToken?.toString();
+
+      if (!accessToken) {
+        throw new Error("Failed to refresh access token.");
+      }
+    }
 
     console.log("Access Token:", accessToken);
 
     if (accessToken) {
       localStorage.setItem("access_token", accessToken);
     }
+
 
     setUser({
       uuid: userAttributes.sub,
@@ -24,6 +35,16 @@ const checkAuth = async (setUser) => {
     });
   } catch (err) {
     console.error("Error fetching user: ", err);
+  }
+};
+
+const isTokenExpired = (token) => {
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1])); // Decode the token payload
+    return payload.exp * 1000 < Date.now(); // Check if token is expired
+  } catch (e) {
+    console.error("Error decoding token:", e);
+    return true; // Assume token is expired if there's an error
   }
 };
 

@@ -2,3 +2,4 @@ docker/**/*
 /workspace/aws-project-cruddur/frontend-react-js/.env
 psycopg2-layer
 .env
+frontend-react-js/build/*
