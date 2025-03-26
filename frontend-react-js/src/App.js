@@ -49,7 +49,7 @@ const router = createBrowserRouter([
     element: <HomeFeedPage />
   },
   {
-    path: "/@:handle",
+    path: "/:handle",
     element: <UserFeedPage />
   },
   {

@@ -6,28 +6,42 @@ import DesktopNavigation  from '../components/DesktopNavigation';
 import DesktopSidebar     from '../components/DesktopSidebar';
 import ActivityFeed from '../components/ActivityFeed';
 import ActivityForm from '../components/ActivityForm';
+import ProfileHeading from '../components/ProfileHeading';
+//import ProfileForm from '../components/ProfileForm';
 
-// [TODO] Authenication
-import Cookies from 'js-cookie'
+//import {checkAuth, getAccessToken} from '../lib/CheckAuth';
+import { getCurrentUser, fetchUserAttributes  } from '@aws-amplify/auth';
 
 export default function UserFeedPage() {
   const [activities, setActivities] = React.useState([]);
+  const [profile, setProfile] = React.useState([]);
   const [popped, setPopped] = React.useState([]);
+  const [poppedProfile, setPoppedProfile] = React.useState([]);
   const [user, setUser] = React.useState(null);
   const dataFetchedRef = React.useRef(false);
 
   const params = useParams();
-  const title = `@${params.handle}`;
 
   const loadData = async () => {
     try {
-      const backend_url = `${process.env.REACT_APP_BACKEND_URL}/api/activities/${title}`
+      const backend_url = `${process.env.REACT_APP_BACKEND_URL}/api/activities/${params.handle}`
+      const token = localStorage.getItem("access_token");
+      if (!token) {
+        console.error("No access token found! Authentication might have failed.");
+        return;
+      }
+
       const res = await fetch(backend_url, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("access_token")}`
+        },
         method: "GET"
       });
+
       let resJson = await res.json();
       if (res.status === 200) {
-        setActivities(resJson)
+        setProfile(resJson.profile)
+        setActivities(resJson.activities)
       } else {
         console.log(res)
       }
@@ -36,14 +50,33 @@ export default function UserFeedPage() {
     }
   };
 
+  // check if we are authenicated
   const checkAuth = async () => {
-    console.log('checkAuth')
-    // [TODO] Authenication
-    if (Cookies.get('user.logged_in')) {
+    try {
+      const cognito_user = await getCurrentUser();
+      console.log("Cognito User:", cognito_user);
+  
+      const userAttributes = await fetchUserAttributes();
+      console.log("User Attributes:", userAttributes);
+  
+      const session = cognito_user?.signInSession;
+      console.log("Session:", session);
+  
+      const accessToken = session?.accessToken?.toString(); // Extract token
+      console.log("Access Token:", accessToken);
+  
+      if (accessToken) {
+        localStorage.setItem("access_token", accessToken);
+      }
+  
       setUser({
-        display_name: Cookies.get('user.name'),
-        handle: Cookies.get('user.username')
-      })
+        uuid: userAttributes.sub,
+        display_name: userAttributes.preferred_username || userAttributes.name || cognito_user.signInDetails?.loginId || "My Name",
+        handle: userAttributes.preferred_username || cognito_user.username || "handle"
+      });
+  
+    } catch (err) {
+      console.log("Error fetching user:", err);
     }
   };
 
@@ -61,7 +94,10 @@ export default function UserFeedPage() {
       <DesktopNavigation user={user} active={'profile'} setPopped={setPopped} />
       <div className='content'>
         <ActivityForm popped={popped} setActivities={setActivities} />
-        <ActivityFeed title={title} activities={activities} />
+        <div className='activity_feed'>
+           <ProfileHeading setPopped={setPoppedProfile} profile={profile} />
+           <ActivityFeed activities={activities} />
+         </div>
       </div>
       <DesktopSidebar user={user} />
     </article>
