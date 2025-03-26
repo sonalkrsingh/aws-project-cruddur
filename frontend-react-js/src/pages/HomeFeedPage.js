@@ -1,12 +1,12 @@
 import './HomeFeedPage.css';
 import React from "react";
 
-import checkAuth from '../lib/CheckAuth';
-import DesktopNavigation  from '../components/DesktopNavigation';
-import DesktopSidebar     from '../components/DesktopSidebar';
-import ActivityFeed from '../components/ActivityFeed';
-import ActivityForm from '../components/ActivityForm';
-import ReplyForm from '../components/ReplyForm';
+import DesktopNavigation  from 'components/DesktopNavigation';
+import DesktopSidebar     from 'components/DesktopSidebar';
+import ActivityFeed from 'components/ActivityFeed';
+import ActivityForm from 'components/ActivityForm';
+import ReplyForm from 'components/ReplyForm';
+//import {checkAuth, getAccessToken} from 'lib/CheckAuth';
 
 //aws-ampilfy
 import { getCurrentUser, fetchUserAttributes  } from '@aws-amplify/auth';
@@ -114,7 +114,7 @@ const checkAuth = async () => {
              setPopped={setPoppedReply} 
              activities={activities} 
            />
-         </div>
+         </div> 
       </div>
       <DesktopSidebar user={user} />
     </article>

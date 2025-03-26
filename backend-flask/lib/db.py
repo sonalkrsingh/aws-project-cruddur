@@ -52,29 +52,37 @@ class Db:
     for key, value in params.items():
       print(key, ":", value)
 
-  def print_sql(self,title,sql,params={}):
+  def print_sql(self,title, sql,params={}):
     cyan = '\033[96m'
     no_color = '\033[0m'
     print(f'{cyan} SQL STATEMENT-[{title}]------{no_color}')
     print(sql,params)
 
-  def query_commit(self, sql, params):
-    self.print_sql('commit with returning',sql,params)
+  def query_commit(self,sql,params={},verbose=True):
+    is_returning_id = False
+    if verbose:
+      self.print_sql('commit with returning',sql,params)
+
+      pattern = r"\bRETURNING\b"
+      is_returning_id = re.search(pattern, sql)
+
     try:
-        with self.pool.connection() as conn:
-            with conn.cursor() as cur:
-                cur.execute(sql, params)
-                conn.commit()
-                returning_id = cur.fetchone()  # Fetch data before the cursor is closed
-        return returning_id[0] if returning_id else None  # Return outside the with-block
+      with self.pool.connection() as conn:
+        cur =  conn.cursor()
+        cur.execute(sql,params)
+        if is_returning_id:
+          returning_id = cur.fetchone()[0]
+        conn.commit() 
+        if is_returning_id:
+          return returning_id
     except Exception as err:
-        app.logger.error(f"Database error: {err}")
-        return None
+      self.print_sql_err(err)
 
 
   # when we want to return a json object
-  def query_array_json(self,sql,params={}):
-    self.print_sql('array',sql,params)
+  def query_array_json(self,sql,params={},verbose=True):
+    if verbose:
+      self.print_sql('array',sql,params)
 
     wrapped_sql = self.query_wrap_array(sql)
     with self.pool.connection() as conn:
@@ -82,11 +90,13 @@ class Db:
         cur.execute(wrapped_sql,params)
         json = cur.fetchone()
         return json[0]
+      
   # When we want to return an array of json objects
-  def query_object_json(self,sql,params={}):
+  def query_object_json(self,sql,params={},verbose=True):
+    if verbose:
+      self.print_sql('json',sql,params)
+      self.print_params(params)
 
-    self.print_sql('json',sql,params)
-    self.print_params(params)
     wrapped_sql = self.query_wrap_object(sql)
 
     with self.pool.connection() as conn:
@@ -98,13 +108,15 @@ class Db:
         else:
           return json[0]
   
-  def query_value(self,sql,params={}):
-     self.print_sql('value',sql,params)
-     with self.pool.connection() as conn:
-       with conn.cursor() as cur:
-         cur.execute(sql,params)
-         json = cur.fetchone()
-         return json[0]
+  def query_value(self,sql,params={},verbose=True):
+    if verbose:
+      self.print_sql('value',sql,params)
+
+    with self.pool.connection() as conn:
+      with conn.cursor() as cur:
+        cur.execute(sql,params)
+        json = cur.fetchone()
+        return json[0]
 
   def query_wrap_object(self,template):
     sql = f"""

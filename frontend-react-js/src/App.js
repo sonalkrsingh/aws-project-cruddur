@@ -11,6 +11,7 @@ import MessageGroupPage from './pages/MessageGroupPage';
 import MessageGroupNewPage from './pages/MessageGroupNewPage';
 import ConfirmationPage from './pages/ConfirmationPage';
 import React from 'react';
+import './components/Popup.css';
 
 import {
   createBrowserRouter,

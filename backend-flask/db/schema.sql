@@ -1,10 +1,17 @@
--- https://www.postgresql.org/docs/current/uuid-ossp.html
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- forcefully drop our tables if they already exist
 DROP TABLE IF EXISTS public.users cascade;
 DROP TABLE IF EXISTS public.activities;
 
+CREATE TABLE IF NOT EXISTS public.schema_information (
+   id integer UNIQUE,
+   last_successful_run bigint
+ );
+ INSERT INTO public.schema_information (id, last_successful_run)
+ VALUES(1, '0')
+ ON CONFLICT (id) DO NOTHING;
+  
 CREATE TABLE public.users (
   uuid UUID default uuid_generate_v4() primary key,
   display_name text NOT NULL,

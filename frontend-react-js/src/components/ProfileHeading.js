@@ -2,6 +2,11 @@ import './ProfileHeading.css';
  import EditProfileButton from '../components/EditProfileButton';
  
  export default function ProfileHeading(props) {
+  console.log("Profile Data:", props.profile); // Debugging
+
+  if (!props.profile) {
+    return <div>Loading...</div>; // Handle the case where profile is undefined
+  }
    const backgroundImage = 'url("/Images/BG.jpg")';
    const styles = {
      backgroundImage: backgroundImage,
@@ -24,7 +29,7 @@ import './ProfileHeading.css';
        </div>
        <EditProfileButton setPopped={props.setPopped} />
      </div>
- 
+     <div class="bio">{props.profile.bio}</div>
    </div>
    );
  }
