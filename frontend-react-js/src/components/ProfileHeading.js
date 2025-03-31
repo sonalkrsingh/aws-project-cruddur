@@ -19,17 +19,17 @@ import './ProfileHeading.css';
      <div className="cruds_count">{props.profile.cruds_count} Cruds</div>
      <div className="banner" style={styles} >
        <div className="avatar">
-         <img src="/images/data.jpg"></img>
+         <img src="/images/cat.jpg"></img>
        </div>
      </div>
      <div className="info">
-       <div class='id'>
+       <div className='id'>
          <div className="display_name">{props.profile.display_name}</div>
          <div className="handle">@{props.profile.handle}</div>
        </div>
        <EditProfileButton setPopped={props.setPopped} />
      </div>
-     <div class="bio">{props.profile.bio}</div>
+     <div className="bio">{props.profile.bio}</div>
    </div>
    );
  }

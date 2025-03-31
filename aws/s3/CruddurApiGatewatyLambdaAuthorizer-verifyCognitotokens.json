@@ -1,0 +1,8 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [{
+      "Effect": "Allow",
+      "Action": ["cognito-idp:GetUser"],
+      "Resource": "arn:aws:cognito-idp:ap-south-1:YOUR_ACCOUNT_ID:userpool/YOUR_USER_POOL_ID"
+    }]
+  }

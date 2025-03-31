@@ -1,0 +1,18 @@
+{
+    "routeKey": "POST /avatars/key_upload",
+    "version": "2.0",
+    "rawPath": "/avatars/key_upload",
+    "rawQueryString": "",
+    "headers": {
+      "authorization": "Bearer eyJraWQiOiJ2emVcL0dscW42YVdjbzdqOWFLR3JPSUllWklMdG1lV3BOVVhTR3BIbGhLOD0iLCJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJlMWQzYWQ0YS1jMDAxLTcwZjYtYmRmZC03OGY4ZmIxYzI5N2UiLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwiaXNzIjoiaHR0cHM6XC9cL2NvZ25pdG8taWRwLmFwLXNvdXRoLTEuYW1hem9uYXdzLmNvbVwvYXAtc291dGgtMV9iM3I3ZThHVUEiLCJjb2duaXRvOnVzZXJuYW1lIjoiZTFkM2FkNGEtYzAwMS03MGY2LWJkZmQtNzhmOGZiMWMyOTdlIiwicHJlZmVycmVkX3VzZXJuYW1lIjoiYW5kcmV3YnJvd24iLCJvcmlnaW5fanRpIjoiMmM1YmVmYjQtM2QxMS00Yzg5LTgyOWQtZDcxMGE2OGQ5MDgyIiwiYXVkIjoiNWc2N3AwMmpiOGp0dWowcmduOXNmYnZsb2wiLCJldmVudF9pZCI6IjZhZmJkMmI3LTUzNDctNDg3Yi1hNzk5LTE3NmU2YTc5NzM1MSIsInRva2VuX3VzZSI6ImlkIiwiYXV0aF90aW1lIjoxNzQzMzMxNDc5LCJuYW1lIjoiQW5kcmV3IEJyb3duIiwiZXhwIjoxNzQzMzM1MDc5LCJpYXQiOjE3NDMzMzE0NzksImp0aSI6IjM4ODk5Nzg2LTZhYWItNGQ5MS04MmI2LWM0NjM2ZGQ0NzFjYSIsImVtYWlsIjoia29iYWc1MDEyN0Bpc29yYXguY29tIn0.0nAunXWSyno3rQrXeF6kgJrxSV7I1FWakpBt-oFeEHfe2gdoKELOgCBIszPiORYlgRNdgqoDGnVmGBGBEjs64KX0WcGzDncnFXyogj1wDh6aiiXetfn6HRUkgvnkDMQTlfMpP1Ad4JfIza_r5EcyrAHMPZ88hIZghG6v4CCmMbGV4AMUZtLG6dvfm2tl-Z_I6syprx_UqLCMKgspgUUq05Y1nnz7uVujkPMdk5f3IjUoNkKyoFWQi8IiWbHYrQF-qZHd9fR8K2dHMkzB02tWqbypHBXr8SsnRlvhgldEZVokT9tGoekNjAINchtnLe7KipxcfkAdqpscyEKkcAFReg",
+      "content-type": "application/json"
+    },
+    "requestContext": {
+      "http": {
+        "method": "POST",
+        "path": "/avatars/key_upload"
+      }
+    },
+    "body": "{\"extension\":\"jpg\"}",
+    "isBase64Encoded": false
+  }

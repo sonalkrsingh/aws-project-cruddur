@@ -5,3 +5,4 @@ psycopg2-layer
 frontend-react-js/build/*
 /thumbing-serverless-cdk/node_modules/
 /aws/lambdas/process-images/node_modules/
+aws_resources.json
