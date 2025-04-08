@@ -1,7 +1,7 @@
 {
     "family": "backend-flask",
-    "executionRoleArn": "arn:aws:iam::533267267280:role/CruddurServiceExecutionRole",
-    "taskRoleArn": "arn:aws:iam::533267267280:role/CruddurTaskRole",
+    "executionRoleArn": "arn:aws:iam::277403261692:role/CruddurServiceExecutionRole",
+    "taskRoleArn": "arn:aws:iam::277403261692:role/CruddurTaskRole",
     "networkMode": "awsvpc",
     "cpu": "256",
     "memory": "512",
@@ -24,7 +24,7 @@
       },
       {
         "name": "backend-flask",
-        "image": "533267267280.dkr.ecr.ap-south-1.amazonaws.com/backend-flask",
+        "image": "277403261692.dkr.ecr.ap-south-1.amazonaws.com/backend-flask",
         "essential": true,
         "healthCheck": {
           "command": [
@@ -55,17 +55,17 @@
         "environment": [
           {"name": "OTEL_SERVICE_NAME", "value": "backend-flask"},
           {"name": "OTEL_EXPORTER_OTLP_ENDPOINT", "value": "https://api.honeycomb.io"},
-          {"name": "AWS_COGNITO_USER_POOL_ID", "value": "ap-south-1_b3r7e8GUA"},
-          {"name": "AWS_COGNITO_USER_POOL_CLIENT_ID", "value": "5g67p02jb8jtuj0rgn9sfbvlol"},
+          {"name": "AWS_COGNITO_USER_POOL_ID", "value": "ap-south-1_WQTzn5e6F"},
+          {"name": "AWS_COGNITO_USER_POOL_CLIENT_ID", "value": "6ah2mmgjthf5aoq5d0pr57hpuc"},
           {"name": "FRONTEND_URL", "value": "*"},
           {"name": "BACKEND_URL", "value": "*"},
           {"name": "AWS_DEFAULT_REGION", "value": "ap-south-1"}
         ],
         "secrets": [
-          {"name": "AWS_ACCESS_KEY_ID"    , "valueFrom": "arn:aws:ssm:ap-south-1:533267267280:parameter/cruddur/backend-flask/AWS_ACCESS_KEY_ID"},
-          {"name": "AWS_SECRET_ACCESS_KEY", "valueFrom": "arn:aws:ssm:ap-south-1:533267267280:parameter/cruddur/backend-flask/AWS_SECRET_ACCESS_KEY"},
-          {"name": "CONNECTION_URL"       , "valueFrom": "arn:aws:ssm:ap-south-1:533267267280:parameter/cruddur/backend-flask/CONNECTION_URL" },
-          {"name": "ROLLBAR_ACCESS_TOKEN" , "valueFrom": "arn:aws:ssm:ap-south-1:533267267280:parameter/cruddur/backend-flask/ROLLBAR_ACCESS_TOKEN" }
+          {"name": "AWS_ACCESS_KEY_ID"    , "valueFrom": "arn:aws:ssm:ap-south-1:277403261692:parameter/cruddur/backend-flask/AWS_ACCESS_KEY_ID"},
+          {"name": "AWS_SECRET_ACCESS_KEY", "valueFrom": "arn:aws:ssm:ap-south-1:277403261692:parameter/cruddur/backend-flask/AWS_SECRET_ACCESS_KEY"},
+          {"name": "CONNECTION_URL"       , "valueFrom": "arn:aws:ssm:ap-south-1:277403261692:parameter/cruddur/backend-flask/CONNECTION_URL" },
+          {"name": "ROLLBAR_ACCESS_TOKEN" , "valueFrom": "arn:aws:ssm:ap-south-1:277403261692:parameter/cruddur/backend-flask/ROLLBAR_ACCESS_TOKEN" }
         ]
       }
     ]

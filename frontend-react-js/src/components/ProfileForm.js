@@ -35,7 +35,7 @@ export default function ProfileForm(props) {
           'Accept': 'application/json',
           'Content-Type': 'application/json'
         }
-      })
+      });
       console.log('Response status:', res.status);
 
       if (!res.ok) {

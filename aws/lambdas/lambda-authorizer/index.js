@@ -20,18 +20,21 @@ try {
   throw err;
 }
 
-function generatePolicy(principalId, effect, resource) {
+function generatePolicy(principalId, effect, resource, context = {}) {
   return {
-    principalId,
+    principalId: principalId || 'anonymous',
     policyDocument: {
       Version: "2012-10-17",
       Statement: [{
         Action: "execute-api:Invoke",
         Effect: effect,
-        Resource: resource
+        Resource: resource,
       }]
     },
-    context: { userId: principalId },
+    context: {
+      ...context,
+      userId: principalId || 'anonymous',
+    },
     headers: {
       "Access-Control-Allow-Origin": "http://localhost:3000",
       "Access-Control-Allow-Headers": "Content-Type,Authorization,X-Amz-Date",
@@ -45,13 +48,14 @@ exports.handler = async (event) => {
   console.log("Incoming event:", JSON.stringify(event, null, 2));
 
   try {
+    // 1. Extract token
     const authHeader = event.identitySource?.[0] || 
                      event.headers?.authorization || 
                      event.headers?.Authorization;
     
     if (!authHeader) {
       console.error("No authorization header found");
-      return generatePolicy('anonymous', 'Deny', event.routeArn);
+      return generatePolicy("anonymous", 'Deny', event.routeArn);
     }
 
     const token = authHeader.startsWith('Bearer ') ? 
@@ -60,23 +64,31 @@ exports.handler = async (event) => {
 
     if (!token || token.split('.').length !== 3) {
       console.error("Malformed token");
-      return generatePolicy('anonymous', 'Deny', event.routeArn);
+      return generatePolicy("anonymous", 'Deny', event.routeArn);
     }
 
-    // Try verifying as both token types
+    // 2. Verify token (try access token first, then ID token)
+    let payload;
     try {
-      const payload = await accessTokenVerifier.verify(token);
+      payload = await accessTokenVerifier.verify(token);
       console.log("Verified as access token");
-      return generatePolicy(payload.sub, 'Allow', event.routeArn);
     } catch (accessErr) {
       console.log("Not an access token, trying as ID token");
-      const payload = await idTokenVerifier.verify(token);
+      payload = await idTokenVerifier.verify(token);
       console.log("Verified as ID token");
-      return generatePolicy(payload.sub, 'Allow', event.routeArn);
     }
+
+    // 3. Return ALLOW policy with user context
+    const policy = generatePolicy(payload.sub, "Allow", event.routeArn, {
+      cognitoUsername: payload["cognito:username"],
+      email: payload.email,
+    });
+
+    console.log("Generated policy:", JSON.stringify(policy, null, 2));
+    return policy;
 
   } catch (err) {
     console.error("Authorization failed:", err);
-    return generatePolicy('anonymous', 'Deny', event.routeArn);
+    return generatePolicy(null, 'Deny', event.routeArn);
   }
 };

@@ -26,7 +26,12 @@ def get_last_successful_run():
     FROM public.schema_information
     LIMIT 1
   """
-  return int(db.query_value(sql,{},verbose=False))
+  try:
+      result = db.query_value(sql, {}, verbose=False)
+      return int(result) if result is not None else 0  # Default to 0 if NULL
+  except Exception as e:
+      print(f"⚠️ Error fetching last_successful_run: {e}")
+      return 0 
 
 def set_last_successful_run(value):
   sql = """
@@ -34,9 +39,13 @@ def set_last_successful_run(value):
   SET last_successful_run = %(last_successful_run)s
   WHERE id = 1
   """
-  db.query_commit(sql,{'last_successful_run': value},verbose=False)
-  return value
-
+  try:
+      db.query_commit(sql, {'last_successful_run': str(value)}, verbose=False)
+      return int(value)
+  except Exception as e:
+      print(f"⚠️ Error updating last_successful_run: {e}")
+      return 0
+  
 last_successful_run = int(get_last_successful_run())
 
 migrations_path = os.path.abspath(os.path.join(current_path, '..', '..','backend-flask','db','migrations'))
@@ -51,8 +60,11 @@ for migration_file in migration_files:
   if match:
     file_time = int(match.group())
     if last_successful_run <= file_time:
-      mod = importlib.import_module(module_name)
-      print('=== running migration: ',module_name)
-      mod.migration.migrate()
-      timestamp = str(time.time()).replace(".","")
-      last_successful_run = set_last_successful_run(timestamp)
+      try:
+          mod = importlib.import_module(module_name)
+          print(f"=== running migration: {module_name}")
+          mod.migration.migrate()
+          last_successful_run = set_last_successful_run(file_time)  # Update to latest file_time
+      except Exception as e:
+          print(f"❌ Migration failed for {module_name}: {e}")
+          sys.exit(1)

@@ -26,11 +26,7 @@ def lambda_handler(event, context):
         print("User inserted successfully")
 
     except (Exception, psycopg2.DatabaseError) as error:
-        print("Database error:",error)
-        return {
-        "statusCode": 500,
-        "body": json.dumps({"error": str(error)})
-    }
+        print("Database error:", error)
         
     finally:
         if conn is not None:

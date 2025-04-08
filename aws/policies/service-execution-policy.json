@@ -6,6 +6,6 @@
         "ssm:GetParameters",
         "ssm:GetParameter"
       ],
-      "Resource": "arn:aws:ssm:ap-south-1:533267267280:parameter/cruddur/backend-flask/*"
+      "Resource": "arn:aws:ssm:ap-south-1:277403261692:parameter/cruddur/backend-flask/*"
     }]
-  }
+  } 

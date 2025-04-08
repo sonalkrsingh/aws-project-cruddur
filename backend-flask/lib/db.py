@@ -22,11 +22,14 @@ class Db:
             
             try:
                 print("🛠️ Attempting to create connection pool...")
-                self.pool = ConnectionPool(connection_url, min_size=1, max_size=10)
+                self.pool = ConnectionPool(connection_url, min_size=1, max_size=10, timeout=5, open=True)  # Explicitly open the pool
+                with self.pool.connection() as conn:
+                  conn.execute("SELECT 1")
                 print("✅ Connection pool initialized successfully!")
             except Exception as e:
                 print(f"🔥 Failed to initialize DB pool: {e}")
                 self.pool = None
+                raise
 
   def template(self,*args):
     pathing = list((app.root_path,'db','sql',) + args)
@@ -62,6 +65,7 @@ class Db:
     is_returning_id = False
     if verbose:
       self.print_sql('commit with returning',sql,params)
+      print(f"Executing with params: {params}")  # Add this line
 
       pattern = r"\bRETURNING\b"
       is_returning_id = re.search(pattern, sql)
@@ -83,6 +87,9 @@ class Db:
   def query_array_json(self,sql,params={},verbose=True):
     if verbose:
       self.print_sql('array',sql,params)
+    
+    if self.pool is None:
+        self.init_pool()  # Reinitialize if pool is None
 
     wrapped_sql = self.query_wrap_array(sql)
     with self.pool.connection() as conn:
@@ -149,5 +156,4 @@ class Db:
     if self.pool:
         self.pool.close()
         self.pool = None
-
 db = Db()

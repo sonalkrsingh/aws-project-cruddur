@@ -1,5 +1,6 @@
 import './ProfileHeading.css';
- import EditProfileButton from '../components/EditProfileButton';
+import EditProfileButton from '../components/EditProfileButton';
+import ProfileAvatar from 'components/ProfileAvatar'
  
  export default function ProfileHeading(props) {
   console.log("Profile Data:", props.profile); // Debugging
@@ -7,9 +8,10 @@ import './ProfileHeading.css';
   if (!props.profile) {
     return <div>Loading...</div>; // Handle the case where profile is undefined
   }
-   const backgroundImage = 'url("/Images/BG.jpg")';
+   const backgroundImage = `url("https://d2j1y2zruzhz3t.cloudfront.net/avatars/processed/${props.id}.jpg")`;
+   //const backgroundImage = 'url("/Images/BG.jpg")';
    const styles = {
-     backgroundImage: backgroundImage,
+     backgroxundImage: backgroundImage,
      backgroundSize: 'cover',
      backgroundPosition: 'center',
    };
@@ -18,9 +20,7 @@ import './ProfileHeading.css';
      <div className='title'>{props.profile.display_name}</div>
      <div className="cruds_count">{props.profile.cruds_count} Cruds</div>
      <div className="banner" style={styles} >
-       <div className="avatar">
-         <img src="/images/cat.jpg"></img>
-       </div>
+       <ProfileAvatar id={props.profile.cognito_user_uuid} />
      </div>
      <div className="info">
        <div className='id'>

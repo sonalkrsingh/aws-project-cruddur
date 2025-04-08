@@ -3,6 +3,6 @@
     "Statement": [{
       "Effect": "Allow",
       "Action": ["cognito-idp:GetUser"],
-      "Resource": "arn:aws:cognito-idp:ap-south-1:YOUR_ACCOUNT_ID:userpool/YOUR_USER_POOL_ID"
+      "Resource": "arn:aws:cognito-idp:ap-south-1:277403261692:userpool/ap-south-1_WQTzn5e6F"
     }]
   }

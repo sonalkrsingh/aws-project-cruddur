@@ -345,20 +345,35 @@ def data_activities():
         if not user_handle:
             raise TokenVerifyError("No username found in token claims")
 
-        cognito_user_id = claims.get('sub')
+        cognito_user_id = claims.get('sub').strip() if claims.get('sub') else None
+        print(f"Input ID bytes: {cognito_user_id.encode('utf-8').hex()}")
 
         if not cognito_user_id:
           app.logger.error("No Cognito user ID found in token")
           return jsonify({"error": "User not authenticated"}), 401
 
         sql = "SELECT uuid FROM public.users WHERE cognito_user_id = %s"
-        user_uuid = db.query_commit(sql, (cognito_user_id,))
+        result = db.query_value("""
+            SELECT uuid, cognito_user_id 
+            FROM public.users 
+            WHERE cognito_user_id = %s
+        """, [cognito_user_id])
+        print(f"Query returned: {result}")
+        #result = db.query_commit(sql, (cognito_user_id,))
 
-        user_uuid = str(user_uuid) if user_uuid else None
-
-        if not user_uuid:
+        # Handle the result properly - this depends on how your query_commit returns data
+        if not result:
             app.logger.error(f"User not found in DB for Cognito ID: {cognito_user_id}")
             return jsonify({"error": "User not registered"}), 400
+
+        user_uuid = result[0] if isinstance(result, tuple) else result
+        # user_uuid = db.query_commit(sql, (cognito_user_id,))
+
+        # user_uuid = str(user_uuid) if user_uuid else None
+
+        # if not user_uuid:
+        #     app.logger.error(f"User not found in DB for Cognito ID: {cognito_user_id}")
+        #     return jsonify({"error": "User not registered"}), 400
 
         message = request.json.get('message', '')  # Use .get() to avoid KeyError
         ttl = request.json.get('ttl', None)

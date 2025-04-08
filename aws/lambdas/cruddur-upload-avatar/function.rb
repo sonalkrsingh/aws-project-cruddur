@@ -9,9 +9,11 @@ def handler(event:, context:)
   allowed_origins = [
     "http://localhost:3000",
     "https://localhost:3000",
+    "http://localhost:4567",
+    "https://localhost:4567",
     "https://3000-omenking-awsbootcampcru-2n1d6e0bd1f.ws-us94.gitpod.io",
-    "http://cruddur-alb-1273100010.ap-south-1.elb.amazonaws.com:3000",
-    "http://cruddur-alb-1273100010.ap-south-1.elb.amazonaws.com:4567"
+    "http://cruddur-alb-750766802.ap-south-1.elb.amazonaws.com:3000",
+    "http://cruddur-alb-750766802.ap-south-1.elb.amazonaws.com:4567"
   ] 
 
   # Get the request origin
@@ -27,7 +29,10 @@ def handler(event:, context:)
 
   # return cors headers for preflight check
   begin
-    if event['routeKey'] == "OPTIONS /{proxy+}"
+    puts "Raw event received: #{event.to_json}"
+    request_method = event.dig('requestContext', 'http', 'method') || event['httpMethod']
+    if request_method == 'OPTIONS'
+
       puts({step: 'preflight', message: 'preflight CORS check'}.to_json)
       return { 
         headers: cors_headers,
@@ -48,20 +53,21 @@ def handler(event:, context:)
 
     puts "Parsed body: #{body}"
 
-    auth_header = event['headers']['authorization'] || event['headers']['Authorization']
+    auth_header = event.dig('headers', 'authorization') || event.dig('headers', 'Authorization')
     unless auth_header && auth_header.start_with?('Bearer ')
+      puts "Missing or invalid Authorization header"
       return {
         headers: cors_headers,
         statusCode: 401,
-        body: {error: "Unauthorized"}.to_json
+        body: {error: "Unauthorized: Missing authorization token"}.to_json
       }
     end
 
-    token = auth_header.split(' ')[1]
+    token = auth_header.split('Bearer ').last
     puts({step: 'presignedurl', access_token: token}.to_json)
 
     # Parse and validate request body
-    body = JSON.parse(event["body"] || "{}")
+    #body = JSON.parse(event["body"] || "{}")
     extension = body["extension"]
     unless extension && extension.match(/^[a-zA-Z0-9]+$/)
       return {
@@ -72,8 +78,30 @@ def handler(event:, context:)
     end
 
     # Decode token and get user UUID
-    decoded_token = JWT.decode(token, nil, false)
-    cognito_user_uuid = decoded_token[0]['sub']
+    begin
+      puts "Raw token: #{token}" # Debug logging
+      
+      # Decode with your Lambda layer
+      decoded_token = JWT.decode(token, nil, false)
+      
+      # Add validation for decoded token structure
+      if decoded_token.nil? || !decoded_token.is_a?(Array) || decoded_token[0].nil?
+        raise "Invalid token structure received from JWT layer"
+      end
+        
+      cognito_user_uuid = decoded_token[0]['sub']
+      puts "Decoded user UUID: #{cognito_user_uuid}"
+      
+    rescue => e
+      puts "JWT decode error: #{e.message}"
+      puts e.backtrace.join("\n")
+      
+      return {
+        headers: cors_headers,
+        statusCode: 401,
+        body: {error: "Token verification failed: #{e.message}"}.to_json
+      }
+    end
 
     # Generate presigned URL
     s3 = Aws::S3::Resource.new
