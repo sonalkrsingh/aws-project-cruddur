@@ -1,0 +1,7 @@
+[deploy]
+bucket = 'artifacts-cfn'
+region = 'ap-south-1'
+stack_name = 'CrdCluster'
+
+[parameters]
+NetworkingStack = 'CrdNet'
