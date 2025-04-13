@@ -36,7 +36,7 @@ class CreateActivity:
         # Validate user_uuid
         if not user_uuid or len(str(user_uuid).strip()) == 0:
             model['errors'].append('User handle cannot be empty')
-
+    
         # Validate message
         if not message or len(message.strip()) == 0:
             model['errors'].append('Message cannot be empty')
