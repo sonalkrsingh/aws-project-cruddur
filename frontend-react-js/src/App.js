@@ -10,6 +10,7 @@ import MessageGroupsPage from './pages/MessageGroupsPage';
 import MessageGroupPage from './pages/MessageGroupPage';
 import MessageGroupNewPage from './pages/MessageGroupNewPage';
 import ConfirmationPage from './pages/ConfirmationPage';
+import ActivityShowPage from './pages/ActivityShowPage';
 import React from 'react';
 import './components/Popup.css';
 
@@ -52,6 +53,10 @@ const router = createBrowserRouter([
   {
     path: "/:handle",
     element: <UserFeedPage />
+  },
+  {
+    path: "/:handle/status/:activity_uuid",
+    element: <ActivityShowPage />
   },
   {
     path: "/messages",
