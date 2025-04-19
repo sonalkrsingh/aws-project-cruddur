@@ -1,6 +1,7 @@
 import './ReplyForm.css';
 import React from "react";
 import process from 'process';
+import {getAccessToken} from '../lib/CheckAuth';
 import {ReactComponent as BombIcon} from './svg/bomb.svg';
 
 import ActivityContent  from '../components/ActivityContent';
@@ -16,30 +17,30 @@ export default function ReplyForm(props) {
   }
 
   const onsubmit = async (event) => {
+    console.log('replyActivity',props.activity)
     event.preventDefault();
     try {
       const backend_url = `${process.env.REACT_APP_BACKEND_URL}/api/activities/${props.activity.uuid}/reply`
+      await getAccessToken()
+      const access_token = localStorage.getItem("access_token")
       const res = await fetch(backend_url, {
         method: "POST",
         headers: {
+          'Authorization': `Bearer ${access_token}`,
           'Accept': 'application/json',
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
+          activity_uuid: props.activity.uuid,
           message: message
         }),
       });
       let data = await res.json();
-      if (res.status === 200) {
-        // add activity to the feed
-
-        let activities_deep_copy = JSON.parse(JSON.stringify(props.activities))
-        let found_activity = activities_deep_copy.find(function (element) {
-          return element.uuid ===  props.activity.uuid;
+      if (props.setReplies) {
+        props.setReplies(current => {
+          const currentReplies = Array.isArray(current) ? current : [];
+          return [data, ...currentReplies];
         });
-        found_activity.replies.push(data)
-
-        props.setActivities(activities_deep_copy);
         // reset and close the form
         setCount(0)
         setMessage('')
@@ -62,10 +63,15 @@ export default function ReplyForm(props) {
     content = <ActivityContent activity={props.activity} />;
   }
 
+  const close = (event)=> {
+    if (event.target.classList.contains("reply_popup")) {
+      props.setPopped(false)
+    }
+  }
 
   if (props.popped === true) {
     return (
-      <div className="popup_form_wrap">
+      <div className="popup_form_wrap reply_popup" onClick={close}>
         <div className="popup_form">
           <div className="popup_heading">
           </div>
