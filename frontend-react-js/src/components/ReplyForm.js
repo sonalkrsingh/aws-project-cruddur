@@ -36,17 +36,11 @@ export default function ReplyForm(props) {
         }),
       });
       let data = await res.json();
-      if (res.status === 200) {
-        // add activity to the feed
-
-        let activities_deep_copy = JSON.parse(JSON.stringify(props.activities))
-        let found_activity = activities_deep_copy.find(function (element) {
-          return element.uuid ===  props.activity.uuid;
+      if (props.setReplies) {
+        props.setReplies(current => {
+          const currentReplies = Array.isArray(current) ? current : [];
+          return [data, ...currentReplies];
         });
-        console.log('found_activity',found_activity)
-        found_activity.replies.push(data)
-
-        props.setActivities(activities_deep_copy);
         // reset and close the form
         setCount(0)
         setMessage('')

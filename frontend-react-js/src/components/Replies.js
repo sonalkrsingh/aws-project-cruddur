@@ -3,15 +3,16 @@ import './Replies.css';
 import ActivityItem from './ActivityItem';
 
 export default function Replies(props) {
-  console.log('replies-props',props)
+  // Ensure replies is always an array, default to empty array if not
+  const replies = Array.isArray(props.replies) ? props.replies : [];
   let content;
-  if (props.replies.length === 0){
+  if (replies.length === 0){
     content = <div className='replies_primer'>
       <span>Nothing to see here yet</span>
     </div>
   } else {
     content = <div className='activities_feed_collection'>
-      {props.replies.map(activity => {
+      {replies.map(activity => {
       return  <ActivityItem 
           setReplyActivity={props.setReplyActivity}
           setPopped={props.setPopped}

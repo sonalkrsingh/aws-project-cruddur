@@ -1,18 +1,17 @@
 import './ActivityShowPage.css';
 import React from "react";
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 
 import DesktopNavigation  from 'components/DesktopNavigation';
 import DesktopSidebar     from 'components/DesktopSidebar';
 import ActivityForm from 'components/ActivityForm';
 import ReplyForm from 'components/ReplyForm';
 import Replies from 'components/Replies';
-import ActivityItem from 'components/ActivityItem'
+import ActivityShowItem from 'components/ActivityShowItem'
 
 import checkAuth from 'lib/CheckAuth';
 
 export default function ActivityShowPage() {
-  const [activities, setActivities] = React.useState([]);
   const [activity, setActivity] = React.useState(null);
   const [replies, setReplies] = React.useState([]);
   const [popped, setPopped] = React.useState(false);
@@ -21,6 +20,11 @@ export default function ActivityShowPage() {
   const [user, setUser] = React.useState(null);
   const dataFetchedRef = React.useRef(false);
   const params = useParams();
+
+  const navigate = useNavigate();
+ 	const goBack = () => {
+ 		navigate(-1);
+ 	}
 
   const loadData = async () => {
     try {
@@ -41,8 +45,10 @@ export default function ActivityShowPage() {
         });
         
         let resJson = await res.json();
+        console.log("resJson:", resJson);
         if (res.status === 200) {
-          setActivities(resJson)
+          setActivity(resJson.activity || resJson); // Handle both response formats
+          setReplies(resJson.replies || []); // Ensure replies is always an array
         } else {
           console.log(res)
         }
@@ -63,7 +69,7 @@ export default function ActivityShowPage() {
   let el_activity
   if (activity !== null){
     el_activity = (
-      <ActivityItem 
+      <ActivityShowItem  
         setReplyActivity={setReplyActivity}
         setPopped={setPoppedReply}
         activity={activity} 
@@ -82,17 +88,19 @@ export default function ActivityShowPage() {
         <ReplyForm 
           activity={replyActivity} 
           popped={poppedReply} 
+          setReplies={setReplies}
           setPopped={setPoppedReply} 
         />
         <div className='activity_feed'>
-          <div className='activity_feed_heading'>
+        <div className='activity_feed_heading flex'>
+        <div className="back" onClick={goBack}>&larr;</div>
             <div className='title'>Home</div>
           </div>
           {el_activity}
           <Replies
             setReplyActivity={setReplyActivity} 
             setPopped={setPoppedReply} 
-            replies={replies} 
+            replies={Array.isArray(replies) ? replies : []} 
           />
         </div>
       </div>
