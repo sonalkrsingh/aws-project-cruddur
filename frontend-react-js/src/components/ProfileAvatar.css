@@ -1,0 +1,20 @@
+.profile-avatar {
+    border-radius: 50%;
+    background-color: #9933ff; /* Fallback color */
+    background-repeat: no-repeat;
+  }
+  
+  .profile-avatar-small {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .profile-avatar-medium {
+    width: 60px;
+    height: 60px;
+  }
+  
+  .profile-avatar-large {
+    width: 80px;
+    height: 80px;
+  }

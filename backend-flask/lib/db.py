@@ -73,6 +73,8 @@ class Db:
     try:
       with self.pool.connection() as conn:
         cur =  conn.cursor()
+        print(f"Executing SQL: {sql}")
+        print(f"With params: {params}")
         cur.execute(sql,params)
         if is_returning_id:
           returning_id = cur.fetchone()[0]
@@ -81,6 +83,8 @@ class Db:
           return returning_id
     except Exception as err:
       self.print_sql_err(err)
+      print(f"SQL Error details: {err}")
+      raise  # Re-raise the exception after logging
 
 
   # when we want to return a json object

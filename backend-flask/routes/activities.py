@@ -48,11 +48,34 @@ def load(app):
   @cross_origin()
   @jwt_required()
   def data_activities():
-    message = request.json['message']
-    ttl = request.json['ttl']
-    model = CreateActivity.run(message, g.cognito_user_id, ttl)
-    return model_json(model)
-
+    try:
+        # Validate required fields
+        if not request.json or 'message' not in request.json:
+            return {'errors': ['Message is required']}, 422
+            
+        message = request.json['message']
+        ttl = request.json.get('ttl', '7-days')  # Default to 7-days if not provided
+        
+        # Run activity creation
+        model = CreateActivity.run(message, g.cognito_user_id, ttl)
+        
+        # Handle response
+        if isinstance(model, dict):
+            if model.get('errors'):
+                return {'errors': model['errors']}, 422
+            if model.get('data'):
+                return model['data'], 201  # 201 Created for successful POST
+            return model, 200
+        elif isinstance(model, tuple):
+            # Handle case where CreateActivity.run returns a tuple
+            return model
+        else:
+            return {'errors': ['Unexpected response format']}, 500
+        
+    except Exception as e:
+        app.logger.error(f"Error creating activity: {str(e)}")
+        return {'errors': [str(e)]}, 422
+    
   @app.route("/api/activities/<string:activity_uuid>/reply", methods=['POST','OPTIONS'])
   @cross_origin()
   @jwt_required()
