@@ -21,13 +21,13 @@
   background: rgba(255,255,255,0.08);
 }
 
-.profile-info .profile-avatar{
+/* .profile-info .profile-avatar{
   background: rgb(149,0,255);
   height: 40px;
   width: 40px;
   border-radius: 999px;
   flex-shrink: 0;
-}
+} */
 
 .profile-desc {
   flex-grow: 1;

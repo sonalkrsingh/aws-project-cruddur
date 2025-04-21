@@ -1,17 +1,18 @@
 import './ProfileAvatar.css';
 
 export default function ProfileAvatar(props) {
+  const { id, size = 'medium' } = props; // Properly destructure props
   const backgroundImage = `url("https://d2j1y2zruzhz3t.cloudfront.net/avatars/processed/${props.id}.jpg")`;
-  const styles = {
-    backgroundImage: backgroundImage,
-    backgroundSize: 'cover',
-    backgroundPosition: 'center',
-  };
+  const sizeClass = `profile-avatar-${size}`;
 
-return (
+  return (
     <div 
-      className="profile-avatar"
-      style={styles}
+      className={`profile-avatar ${sizeClass}`}
+      style={{
+        backgroundImage: backgroundImage,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+      }}
     ></div>
   );
 }

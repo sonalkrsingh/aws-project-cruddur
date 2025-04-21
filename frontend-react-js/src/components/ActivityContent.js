@@ -3,6 +3,7 @@ import './ActivityContent.css';
 import { Link } from "react-router-dom";
 import { DateTime } from 'luxon';
 import {ReactComponent as BombIcon} from './svg/bomb.svg';
+import ProfileAvatar from 'components/ProfileAvatar'
 
 export default function ActivityContent(props) {
   const format_time_created_at = (value) => {
@@ -49,7 +50,11 @@ export default function ActivityContent(props) {
 
   return (
     <div className='activity_content_wrap'>
-      <Link className='activity_avatar'to={`/`+props.activity.handle} ></Link>
+      <Link className='activity_avatar'to={`/`+props.activity.handle} >
+      {/* Debug output: */}
+      {console.log('Avatar ID:', props.activity.uuid)} 
+      <ProfileAvatar id={props.activity.uuid || "default-id"} size="medium" /> {/* Add this line */}
+      </Link>
       <div className='activity_content'>
         <div className='activity_meta'>
           <div className='activity_identity' >

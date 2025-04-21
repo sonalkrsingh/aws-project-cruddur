@@ -46,7 +46,7 @@ export default function ProfileInfo(props) {
         <button onClick={handleSignOut}>Sign Out</button> 
       </div>
       <div className="profile-info" onClick={click_pop}>
-      <ProfileAvatar id={props.user?.uuid || "default-id"} />
+      <ProfileAvatar id={props.user?.uuid || "default-id"} size="small" />
         <div className="profile-desc">
           <div className="profile-display-name">{props.user.display_name || "My Name" }</div>
           <div className="profile-username">@{props.user.handle || "handle"}</div>

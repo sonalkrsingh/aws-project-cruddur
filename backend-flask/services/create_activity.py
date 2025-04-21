@@ -10,10 +10,32 @@ logger = logging.getLogger(__name__)
 class CreateActivity:
     @staticmethod
     def run(message, user_uuid, ttl):
+        """
+        Args:
+            message: Activity message content
+            user_uuid: Cognito user ID (not the database UUID)
+            ttl: Time-to-live for the activity
+        """
+
         model = {
             'errors': [],
             'data': None
         }
+
+        # First get the database UUID using the Cognito ID
+        # Change cognito_user_id to user_uuid since that's the parameter name
+        user = db.query_object_json("""
+          SELECT uuid FROM users 
+          WHERE cognito_user_id = %(cognito_id)s
+        """, {'cognito_id': user_uuid})  # Use user_uuid here
+
+        if not user or 'uuid' not in user:
+            current_app.logger.error(f'User not found for Cognito ID: {user_uuid}')
+            model['errors'].append('User not found in database')
+            return model
+
+        db_uuid = user['uuid']
+        current_app.logger.info(f"Found user with db_uuid: {db_uuid}")
 
         now = datetime.now(timezone.utc).astimezone()
 
@@ -49,30 +71,33 @@ class CreateActivity:
         try:
             expires_at = now + ttl_offset
             current_app.logger.info(f'Creating activity for {user_uuid} with TTL {ttl}')
-            uuid = CreateActivity.create_activity(user_uuid, message, expires_at)
+            uuid = CreateActivity.create_activity(db_uuid, message, expires_at)
 
             if not uuid:
-                raise Exception("Activity creation failed, UUID not returned.")
+                model['errors'].append('Activity creation failed')
+                return model, 422  # Return both model and status code
 
             current_app.logger.info(f'Activity created successfully with UUID: {uuid}')
             object_json = CreateActivity.query_object_activity(uuid)
 
             if not object_json:
-                raise Exception("Querying activity failed, no data returned.")
+                model['errors'].append('Failed to fetch created activity')
+                return model, 422
 
             model['data'] = object_json
+            return model, 201  # Success with 201 status  # Return both model and error status
+
         except Exception as e:
-            current_app.logger.error(f'Error in CreateActivity: {str(e)}', exc_info=True)
-            model['errors'].append(f'Database error: {str(e)}')
-
-        return model
-
+            model['errors'].append(str(e))
+            return model, 422
+        
     @staticmethod
     def create_activity(user_uuid, message, expires_at):
         try:
             current_app.logger.info(f"Inserting activity for {user_uuid} into DB")
 
             sql = db.template('activities', 'create')
+            current_app.logger.debug(f"SQL Template: {sql}")    
             query_params = {
                 'user_uuid': user_uuid,
                 'message': message,

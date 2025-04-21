@@ -46,7 +46,7 @@ export default function ActivityForm(props) {
       });
 
       let data = await res.json();
-      if (res.status === 200) {
+      if (res.status === 200 || res.status === 201) {
         // add activity to the feed
         props.setActivities(current => [data,...current]);
         // reset and close the form
