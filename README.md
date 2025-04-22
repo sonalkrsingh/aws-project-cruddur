@@ -1,11 +1,8 @@
 # AWS Cloud Project Project
 
-- Application: Cruddur
-
 # 🌐 Cruddur – Ephemeral Micro-Blogging Platform
 
 ![Build](https://img.shields.io/github/workflow/status/sonalkrsingh/cruddur/Build?label=build)
-![License](https://img.shields.io/github/license/sonalkrsingh/cruddur)
 ![AWS](https://img.shields.io/badge/deployed-AWS-orange)
 ![CI/CD](https://img.shields.io/badge/CI/CD-CodePipeline-blue)
 ![Status](https://img.shields.io/badge/status-Production--Ready-brightgreen)
@@ -19,20 +16,24 @@
 Cruddur is a cloud-native, ephemeral-first micro-blogging platform built using a **modern AWS stack**. Designed for scale, security, and learning real-world cloud practices.
 
 ## 🚀 Live Demo  
-🌐 [Visit Cruddur](http://cruddur-alb-750766802.ap-south-1.elb.amazonaws.com:3000/)
+👉🌐 [Access the application](http://cruddur-alb-750766802.ap-south-1.elb.amazonaws.com:3000/)  
+🧑‍💻 _Frontend is static React; backend is Flask API containerized on ECS Fargate._
 
 ---
 
 ## 🛠️ Tech Stack
-- **Frontend**: React + S3 + CloudFront
-- **Backend**: Flask + Docker + ECS Fargate
-- **Auth**: Amazon Cognito + Lambda Hooks
-- **API**: AWS AppSync + GraphQL + Lambda Resolver
-- **DB**: Amazon RDS + DynamoDB
-- **CI/CD**: CodePipeline + CodeBuild + CloudFormation
-- **Media Upload**: S3 + Lambda + API Gateway
-- **Caching**: Momento
-- **Monitoring**: CloudWatch, Rollbar, Honeycomb, X-Ray
+| Category      | Tools & Services                                                                 |
+|---------------|----------------------------------------------------------------------------------|
+| **Frontend**  | React.js, S3 static hosting, CloudFront CDN                                      |
+| **Backend**   | Flask (Python), ECS Fargate, Docker, ALB                                         |
+| **Databases** | Amazon RDS (PostgreSQL), Amazon DynamoDB                                         |
+| **Auth**      | Amazon Cognito + Lambda Hook for user sync                                       |
+| **Media**     | S3 Presigned URLs, Lambda for processing, CloudFront for asset delivery          |
+| **CI/CD**     | AWS CodePipeline, CodeBuild, ECR                                                 |
+| **API**       | AWS AppSync (GraphQL + WebSocket Subscriptions), Lambda Authorizer               |
+| **Caching**   | Momento Serverless Cache                                                         |
+| **Infra as Code** | AWS CloudFormation                                                           |
+| **Monitoring**| AWS X-Ray, CloudWatch, Honeycomb, Rollbar              
 
 ---
 
